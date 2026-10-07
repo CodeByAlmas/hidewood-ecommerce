@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const lineItems: any[] = [];
 
     for (const item of items) {
-      const product = dbProducts.find((p) => p.id === item.productId);
+      const product = dbProducts.find((p: any) => p.id === item.productId);
       if (!product || !product.inStock) {
         return NextResponse.json(
           { error: `Item ${item.productId} is unavailable` },
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
             productId: i.productId,
             variantInfo: { size: i.size, width: i.width, buckle: i.buckle },
             quantity: i.quantity,
-            unitPrice: dbProducts.find((p) => p.id === i.productId)!.price,
+            unitPrice: dbProducts.find((p: any) => p.id === i.productId)!.price,
           })),
         },
       },
