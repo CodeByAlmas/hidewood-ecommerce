@@ -1,0 +1,82 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Category {
+  BELTS
+  WALLETS
+  BAGS
+  ACCESSORIES
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+}
+
+model Product {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  name        String
+  description String
+  price       Int            // Stored in smallest currency unit (e.g. cents/paise)
+  category    Category       @default(BELTS)
+  leatherTone String         // 'Tuscan Tan', 'Obsidian Black', 'Oxblood'
+  images      String[]
+  inStock     Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  variants    ProductVariant[]
+  orderItems  OrderItem[]
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size       String   // e.g., '32', '34', '36', '38', '40'
+  width      String   // e.g., '32mm Dress', '38mm Casual Heritage'
+  buckleType String   // 'Antique Brass', 'Matte Gunmetal', 'Brushed Nickel'
+  inventory  Int      @default(15)
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  customerEmail  String
+  customerPhone  String?
+  shippingAddr   Json
+  totalAmount    Int
+  currency       String      @default("INR")
+  status         OrderStatus @default(PENDING)
+  paymentId      String?     @unique
+  paymentGateway String      // 'STRIPE' | 'RAZORPAY'
+  items          OrderItem[]
+  createdAt      DateTime    @default(now())
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  variantInfo Json    // { size: '34', width: '38mm', buckle: 'Brass' }
+  quantity   Int
+  unitPrice  Int
+}
+
+model CustomInquiry {
+  id         String   @id @default(cuid())
+  services   String[]
+  name       String
+  email      String
+  notes      String?
+  createdAt  DateTime @default(now())
+}
