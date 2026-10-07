@@ -2,19 +2,22 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16' as any,
-});
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder_key_for_build';
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2023-10-16' as any,
+    });
+
     const { items, customerEmail, shippingDetails } = await req.json();
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
 
-    // 1. Re-validate prices from Database (Prevents Price Tampering)
+    // 1. Re-validate prices from Database
     const productIds = items.map((i: any) => i.productId);
     const dbProducts = await prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -71,8 +74,8 @@ export async function POST(req: Request) {
       customer_email: customerEmail,
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?orderId=${order.id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/order/success?orderId=${order.id}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/cart`,
       metadata: {
         orderId: order.id,
       },
