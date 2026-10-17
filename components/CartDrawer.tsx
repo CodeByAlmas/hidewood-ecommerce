@@ -8,27 +8,75 @@ import { TextRoll } from './Navbar';
 import { useCartStore } from '@/store/useCartStore';
 import { useCartHydrated } from '@/hooks/useCartHydrated';
 
-export default function CartDrawer() {
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  size: string;
+  quantity: number;
+  image: string;
+  category?: string;
+}
+
+export interface CartDrawerProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  items?: CartItem[];
+  onUpdateQuantity?: (id: string, size: string, delta: number) => void;
+  onRemoveItem?: (id: string, size: string) => void;
+  onCheckout?: () => void;
+}
+
+export default function CartDrawer({
+  isOpen: propIsOpen,
+  onClose: propOnClose,
+  items: propItems,
+  onUpdateQuantity: propOnUpdateQuantity,
+  onRemoveItem: propOnRemoveItem,
+  onCheckout: propOnCheckout,
+}: CartDrawerProps = {}) {
   const router = useRouter();
   const isHydrated = useCartHydrated();
 
   const {
-    isOpen,
-    closeCart,
-    items,
-    updateQuantity,
-    removeItem,
+    isOpen: storeIsOpen,
+    closeCart: storeCloseCart,
+    items: storeItems,
+    updateQuantity: storeUpdateQuantity,
+    removeItem: storeRemoveItem,
     getSubtotal,
     getTotalItems,
   } = useCartStore();
 
+  const activeIsOpen = propIsOpen !== undefined ? propIsOpen : storeIsOpen;
+  const handleClose = propOnClose || storeCloseCart;
+
+  const rawItems = propItems !== undefined ? propItems : (isHydrated ? storeItems : []);
+  const activeItems = Array.isArray(rawItems) ? rawItems : [];
+
+  const handleUpdateQty = (id: string, size: string, delta: number) => {
+    if (propOnUpdateQuantity) {
+      propOnUpdateQuantity(id, size, delta);
+    } else {
+      storeUpdateQuantity(id, size, delta);
+    }
+  };
+
+  const handleRemove = (id: string, size: string) => {
+    if (propOnRemoveItem) {
+      propOnRemoveItem(id, size);
+    } else {
+      storeRemoveItem(id, size);
+    }
+  };
+
   // ESC key listener & body scroll lock
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeCart();
+      if (e.key === 'Escape') handleClose();
     };
 
-    if (isOpen) {
+    if (activeIsOpen) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     } else {
@@ -39,23 +87,31 @@ export default function CartDrawer() {
       document.body.style.overflow = 'unset';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, closeCart]);
+  }, [activeIsOpen, handleClose]);
 
-  const activeItems = isHydrated ? items : [];
-  const subtotal = isHydrated ? getSubtotal() : 0;
-  const totalCount = isHydrated ? getTotalItems() : 0;
+  const subtotal = propItems !== undefined
+    ? activeItems.reduce((acc, curr) => acc + curr.price * curr.quantity, 0)
+    : (isHydrated ? getSubtotal() : 0);
+
+  const totalCount = propItems !== undefined
+    ? activeItems.reduce((acc, curr) => acc + curr.quantity, 0)
+    : (isHydrated ? getTotalItems() : 0);
 
   const freeShippingThreshold = 5000;
   const progressToFreeShipping = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
   const handleProceedToCheckout = () => {
-    closeCart();
-    router.push('/cart');
+    if (propOnCheckout) {
+      propOnCheckout();
+    } else {
+      handleClose();
+      router.push('/cart');
+    }
   };
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {activeIsOpen && (
         <div className="fixed inset-0 z-50 flex justify-end select-none">
           {/* BACKDROP OVERLAY */}
           <motion.div
@@ -63,7 +119,7 @@ export default function CartDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            onClick={closeCart}
+            onClick={handleClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
           />
 
@@ -85,7 +141,8 @@ export default function CartDrawer() {
               </div>
 
               <button
-                onClick={closeCart}
+                type="button"
+                onClick={handleClose}
                 className="p-2 border border-black/10 hover:border-black hover:bg-neutral-100 transition-colors cursor-pointer group"
                 aria-label="Close Bag"
               >
@@ -135,12 +192,12 @@ export default function CartDrawer() {
               ) : (
                 activeItems.map((item) => (
                   <div key={`${item.id}-${item.size}`} className="pt-4 first:pt-0 flex gap-4">
-                    {/* THUMBNAIL */}
+                    {/* THUMBNAIL - Natural Leather Color */}
                     <div className="relative w-20 h-24 sm:w-22 sm:h-26 bg-neutral-200 border border-black/10 shrink-0 overflow-hidden">
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="w-full h-full object-cover grayscale contrast-125"
+                        className="w-full h-full object-cover"
                       />
                     </div>
 
@@ -150,7 +207,7 @@ export default function CartDrawer() {
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <span className="text-[9px] uppercase font-mono tracking-widest text-neutral-400 block">
-                              {item.category}
+                              {item.category || 'Atelier Series'}
                             </span>
                             <h3 className="text-sm font-bold uppercase tracking-tight text-black">
                               {item.name}
@@ -172,26 +229,29 @@ export default function CartDrawer() {
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center border border-black/20 bg-white">
                           <button
-                            onClick={() => updateQuantity(item.id, item.size, -1)}
+                            type="button"
+                            onClick={() => handleUpdateQty(item.id, item.size, -1)}
                             className="p-1.5 hover:bg-neutral-100 cursor-pointer"
                             aria-label="Decrease quantity"
                           >
-                            <Minus className="w-3 h-3 text-black" />
+                            <Minus className="w-3.5 h-3.5 text-black" />
                           </button>
                           <span className="px-3 text-xs font-mono font-bold text-black">
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.size, 1)}
+                            type="button"
+                            onClick={() => handleUpdateQty(item.id, item.size, 1)}
                             className="p-1.5 hover:bg-neutral-100 cursor-pointer"
                             aria-label="Increase quantity"
                           >
-                            <Plus className="w-3 h-3 text-black" />
+                            <Plus className="w-3.5 h-3.5 text-black" />
                           </button>
                         </div>
 
                         <button
-                          onClick={() => removeItem(item.id, item.size)}
+                          type="button"
+                          onClick={() => handleRemove(item.id, item.size)}
                           className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 hover:text-black transition-colors cursor-pointer underline"
                         >
                           Remove
@@ -231,6 +291,7 @@ export default function CartDrawer() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleProceedToCheckout}
                   className="group w-full bg-black text-white py-4 px-6 text-xs uppercase font-bold tracking-widest hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >

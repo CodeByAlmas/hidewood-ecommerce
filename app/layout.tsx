@@ -82,11 +82,9 @@ function GlobalLinkInterceptor({ children }: { children: React.ReactNode }) {
       const anchor = (e.target as HTMLElement).closest('a');
       if (!anchor) return;
 
-      // URL extraction check: Sirf real destination path pick karega
       const rawHref = anchor.getAttribute('href');
       if (!rawHref) return;
 
-      // Ignore hash anchors (#hero, #archive), downloads, and external links
       if (
         rawHref.startsWith('#') ||
         rawHref.startsWith('/#') ||
@@ -96,7 +94,6 @@ function GlobalLinkInterceptor({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Check if internal route
       const destination = anchor.pathname || rawHref;
       if (destination.startsWith('/')) {
         e.preventDefault();
