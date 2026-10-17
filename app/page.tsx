@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import Preloader from '@/components/Preloader';
 import HeroTitle from '@/components/HeroTitle';
@@ -81,48 +82,124 @@ const PRODUCTS: Product[] = [
   }
 ];
 
+// Memory Guard: F5/Browser Refresh par reset hota hai (false banta hai).
+// Routing (Return to index / Logo click) par true rehta hai.
+let hasPreloadedInCurrentSession = false;
+
 export default function HomePage() {
-  const [preloaderDone, setPreloaderDone] = useState(false);
+  const router = useRouter();
+
+  // Agar refresh hua hai to false rahega (preloader chalega).
+  // Agar doosre page se wapas aaye ho to true rahega (preloader nahi aayega, direct HeroTitle dikhega).
+  const [preloaderDone, setPreloaderDone] = useState(hasPreloadedInCurrentSession);
+
+  const handlePreloaderComplete = () => {
+    hasPreloadedInCurrentSession = true;
+    setPreloaderDone(true);
+  };
+
+  const homeSchema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Store',
+        '@id': 'https://hidewood.example.com/#store',
+        name: 'HIDEWOOD Atelier',
+        url: 'https://hidewood.example.com',
+        description:
+          'Archival luxury leather house specializing in 4.2mm unsplit Tuscan steerhide belts, solid sand-cast brass hardware, and bespoke leather goods forged in Kanpur.',
+        priceRange: '₹₹₹',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Kanpur',
+          addressRegion: 'Uttar Pradesh',
+          addressCountry: 'IN',
+        },
+        hasOfferCatalog: {
+          '@type': 'OfferCatalog',
+          name: 'Series 01 Atelier Catalogue',
+          itemListElement: PRODUCTS.map((prod, index) => ({
+            '@type': 'Offer',
+            itemOffered: {
+              '@type': 'Product',
+              name: prod.name,
+              category: prod.category,
+              description: prod.description,
+              image: prod.images[0],
+              offers: {
+                '@type': 'Offer',
+                price: prod.price,
+                priceCurrency: 'INR',
+                availability: prod.inStock
+                  ? 'https://schema.org/InStock'
+                  : 'https://schema.org/OutOfStock',
+              },
+            },
+            position: index + 1,
+          })),
+        },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': 'https://hidewood.example.com/#website',
+        url: 'https://hidewood.example.com',
+        name: 'HIDEWOOD Atelier',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://hidewood.example.com/products?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
 
   return (
-    <div className="w-full bg-[#F8F8F6] text-[#111111] antialiased selection:bg-black selection:text-white overflow-x-hidden">
-      
-      {/* 1. MODULAR PRELOADER WITH SMOOTH PAGE REVEAL SYNC */}
-      <AnimatePresence>
-        {!preloaderDone && (
-          <Preloader onComplete={() => setPreloaderDone(true)} />
-        )}
-      </AnimatePresence>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeSchema) }}
+      />
 
-      {/* 2. MAIN CONTENT (REVEALS ONLY AFTER PRELOADER COMPLETES) */}
-      <main id="hero" className="px-3 sm:px-8 lg:px-12 pt-20 sm:pt-28 pb-0 max-w-[1800px] mx-auto w-full overflow-x-hidden">
-        {preloaderDone && <HeroTitle />}
+      <div className="w-full bg-[#F8F8F6] text-[#111111] antialiased selection:bg-black selection:text-white overflow-x-hidden">
+        
+        {/* PRELOADER: Sirf hard refresh par aayega, navigation par kabhi nahi */}
+        <AnimatePresence mode="wait">
+          {!preloaderDone && (
+            <Preloader onComplete={handlePreloaderComplete} />
+          )}
+        </AnimatePresence>
 
-        <CategoryRunway
-          isReady={preloaderDone}
-          onSelectSubCategory={(subId) => {
-            const target = document.getElementById('archive');
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
-          }}
-        />
+        {/* HERO & CONTENT: Refresh par preloader khatam hone par live reveal hoga, 
+            aur in-app navigation (Return to Index / Logo) par bina kisi delay ke instant clean settle rahega */}
+        <main id="hero" className="px-3 sm:px-8 lg:px-12 pt-20 sm:pt-28 pb-0 max-w-[1800px] mx-auto w-full overflow-x-hidden">
+          {preloaderDone && <HeroTitle />}
 
-        <ProductGrid
-          products={PRODUCTS}
-          onSelectProduct={(prod) => {
-            window.location.href = `/products/${prod.id}`;
-          }}
-          isReady={preloaderDone}
-        />
+          <CategoryRunway
+            isReady={preloaderDone}
+            onSelectSubCategory={(subId) => {
+              const target = document.getElementById('archive');
+              if (target) target.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
 
-        <AtelierFilm isReady={preloaderDone} />
+          <ProductGrid
+            products={PRODUCTS}
+            onSelectProduct={(prod) => {
+              router.push(`/products/${prod.id}`);
+            }}
+            isReady={preloaderDone}
+          />
 
-        <CraftAnatomy />
+          <AtelierFilm isReady={preloaderDone} />
 
-        <TiltedTilesReviews />
+          <CraftAnatomy />
 
-        <DropReservationBanner />
-      </main>
+          <TiltedTilesReviews />
 
-    </div>
+          <DropReservationBanner />
+        </main>
+
+      </div>
+    </>
   );
 }

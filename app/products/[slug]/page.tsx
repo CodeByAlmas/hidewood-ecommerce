@@ -25,24 +25,28 @@ export default function ProductDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-[#F8F8F6] text-[#111111] antialiased select-none pt-20 sm:pt-24 pb-12 sm:pb-20">
       
-      {/* 1. TOP BREADCRUMB */}
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 py-3 sm:py-4 border-b border-black/10">
+      {/* 1. TOP BREADCRUMB (Bulletproof Navigation to /products) */}
+      <nav
+        aria-label="Breadcrumb Navigation"
+        className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 py-3 sm:py-4 border-b border-black/10 select-none"
+      >
         <div className="flex items-center justify-between font-mono text-[10px] sm:text-xs uppercase">
           <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-neutral-600 hover:text-black transition-colors font-semibold"
+            href="/products"
+            className="group inline-flex items-center gap-1.5 py-1 px-1 -ml-1 text-neutral-600 hover:text-black transition-colors font-semibold cursor-pointer min-h-[36px]"
+            aria-label="Return to Full Product Archive"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Archive</span>
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-1 pointer-events-none" />
+            <span className="pointer-events-none">Return to Archive</span>
           </Link>
 
-          <div className="flex items-center gap-2 text-neutral-400">
+          <div className="flex items-center gap-2 text-neutral-400 font-mono text-[10px] sm:text-xs">
             <span>SERIES 01</span>
             <span>&bull;</span>
-            <span className="text-black font-bold">{product.category}</span>
+            <span className="text-black font-bold uppercase">{product.category}</span>
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* 2. SPLIT LAYOUT */}
       <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 pt-4 sm:pt-10">

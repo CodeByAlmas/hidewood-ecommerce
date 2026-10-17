@@ -1,8 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, ArrowUpRight, ChevronDown, ChevronRight, Layers, Sparkles } from 'lucide-react';
+import { ShoppingBag, ArrowUpRight, ChevronDown, ChevronRight, KeyRound, User } from 'lucide-react';
+import { useCartStore } from '@/store/useCartStore';
+import { useCartHydrated } from '@/hooks/useCartHydrated';
 
 interface NavbarProps {
   bagCount?: number;
@@ -11,9 +15,9 @@ interface NavbarProps {
 }
 
 // ========================================================
-// 1. SKIPER UI TEXTROLL (For Desktop Links)
+// 1. SKIPER UI TEXTROLL (Fixed Height & Strict Masking)
 // ========================================================
-const STAGGER = 0.022;
+const STAGGER = 0.02;
 
 const TextRoll: React.FC<{
   children: string;
@@ -24,10 +28,9 @@ const TextRoll: React.FC<{
     <motion.span
       initial="initial"
       whileHover="hovered"
-      className={`relative inline-block overflow-hidden cursor-pointer select-none ${className}`}
-      style={{ lineHeight: 0.95 }}
+      className={`relative inline-flex items-center justify-center overflow-hidden cursor-pointer select-none h-[1.15em] leading-none ${className}`}
     >
-      <div className="block">
+      <span className="inline-flex">
         {children.split('').map((l, i) => {
           const delay = center
             ? STAGGER * Math.abs(i - (children.length - 1) / 2)
@@ -36,12 +39,12 @@ const TextRoll: React.FC<{
           return (
             <motion.span
               variants={{
-                initial: { y: 0 },
-                hovered: { y: '-105%' },
+                initial: { y: '0%' },
+                hovered: { y: '-120%' },
               }}
               transition={{
                 ease: [0.25, 1, 0.5, 1],
-                duration: 0.35,
+                duration: 0.32,
                 delay,
               }}
               className="inline-block"
@@ -51,9 +54,9 @@ const TextRoll: React.FC<{
             </motion.span>
           );
         })}
-      </div>
+      </span>
 
-      <div className="absolute inset-0">
+      <span className="absolute inset-0 inline-flex">
         {children.split('').map((l, i) => {
           const delay = center
             ? STAGGER * Math.abs(i - (children.length - 1) / 2)
@@ -62,12 +65,12 @@ const TextRoll: React.FC<{
           return (
             <motion.span
               variants={{
-                initial: { y: '105%' },
-                hovered: { y: 0 },
+                initial: { y: '120%' },
+                hovered: { y: '0%' },
               }}
               transition={{
                 ease: [0.25, 1, 0.5, 1],
-                duration: 0.35,
+                duration: 0.32,
                 delay,
               }}
               className="inline-block"
@@ -77,21 +80,14 @@ const TextRoll: React.FC<{
             </motion.span>
           );
         })}
-      </div>
+      </span>
     </motion.span>
   );
 };
 
 // ========================================================
-// 2. PRELOADER-STYLE DIRECTIONAL LETTER REVEAL (For Mobile Menu)
+// 2. KINETIC BOTTOM-TO-TOP LETTER REVEAL (Clean Mobile Stagger)
 // ========================================================
-const REVEAL_VECTORS = [
-  { y: '105%', x: 0 },
-  { y: 0, x: '-105%' },
-  { y: '-105%', x: 0 },
-  { y: 0, x: '105%' },
-];
-
 function DirectionalTextReveal({
   text,
   isOpen,
@@ -103,40 +99,37 @@ function DirectionalTextReveal({
 }) {
   return (
     <span className="inline-flex overflow-hidden">
-      {text.split('').map((char, index) => {
-        const vector = REVEAL_VECTORS[index % REVEAL_VECTORS.length];
-        return (
-          <span key={index} className="overflow-hidden inline-block relative py-1 px-[0.5px]">
-            <motion.span
-              initial={{ x: vector.x, y: vector.y }}
-              animate={
-                isOpen
-                  ? {
-                      x: 0,
-                      y: 0,
-                      transition: {
-                        duration: 0.45,
-                        delay: baseDelay + index * 0.02,
-                        ease: [0.16, 1, 0.3, 1],
-                      },
-                    }
-                  : {
-                      x: vector.x,
-                      y: vector.y,
-                      transition: {
-                        duration: 0.3,
-                        delay: (text.length - index) * 0.015,
-                        ease: [0.7, 0, 0.3, 1],
-                      },
-                    }
-              }
-              className="inline-block leading-none"
-            >
-              {char === ' ' ? '\u00A0' : char}
-            </motion.span>
-          </span>
-        );
-      })}
+      {text.split('').map((char, index) => (
+        <span key={index} className="overflow-hidden inline-block relative py-0.5 px-[0.5px]">
+          <motion.span
+            initial={{ y: '120%', opacity: 0 }}
+            animate={
+              isOpen
+                ? {
+                    y: '0%',
+                    opacity: 1,
+                    transition: {
+                      duration: 0.42,
+                      delay: baseDelay + index * 0.022,
+                      ease: [0.16, 1, 0.3, 1],
+                    },
+                  }
+                : {
+                    y: '-120%',
+                    opacity: 0,
+                    transition: {
+                      duration: 0.28,
+                      delay: (text.length - index) * 0.015,
+                      ease: [0.7, 0, 0.3, 1],
+                    },
+                  }
+            }
+            className="inline-block leading-none"
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </motion.span>
+        </span>
+      ))}
     </span>
   );
 }
@@ -148,7 +141,7 @@ interface SubCategoryItem {
   name: string;
   tag: string;
   spec: string;
-  id: string;
+  href: string;
 }
 
 interface ProductCategory {
@@ -164,10 +157,10 @@ const PRODUCT_TAXONOMY: ProductCategory[] = [
     title: 'Heirloom Belts',
     tagline: '4.2mm Single-Origin Steerhide',
     items: [
-      { name: 'The Bridle Edition', tag: 'Limited Run', spec: '38mm Full-Grain // Brass', id: 'archive' },
-      { name: 'The Onyx Dress Belt', tag: 'Bespoke Suiting', spec: '32mm Calfskin // Graphite', id: 'archive' },
-      { name: 'Heritage Raw Saddle', tag: 'Natural Tannin', spec: '40mm Heavy Bovine // Patina', id: 'archive' },
-      { name: 'Solid Sand-Cast Buckles', tag: 'Hardware Only', spec: 'Molten Sand-Cast Metal', id: 'anatomy' },
+      { name: 'The Bridle Edition', tag: 'Limited Run', spec: '38mm Full-Grain // Brass', href: '/products/the-bridle-edition' },
+      { name: 'The Onyx Dress Belt', tag: 'Bespoke Suiting', spec: '32mm Calfskin // Graphite', href: '/products/the-onyx-dress' },
+      { name: 'Heritage Raw Saddle', tag: 'Natural Tannin', spec: '40mm Heavy Bovine // Patina', href: '/products/heritage-raw-saddle' },
+      { name: 'Solid Sand-Cast Buckles', tag: 'Hardware Only', spec: 'Molten Sand-Cast Metal', href: '/products' },
     ],
   },
   {
@@ -175,9 +168,9 @@ const PRODUCT_TAXONOMY: ProductCategory[] = [
     title: 'Atelier Outerwear',
     tagline: 'Tea-Core Hide & Heavy Brass',
     items: [
-      { name: 'Tuscan Moto Rider', tag: 'Drop 02 Preview', spec: '1.4mm Heavy Cowhide', id: 'reservation' },
-      { name: 'Atelier Field Overshirt', tag: 'Hand-Oiled', spec: 'Unlined Raw Suede', id: 'reservation' },
-      { name: 'Archive Aviator Flight', tag: 'Limited Batch', spec: 'Shearling Collar // Brass', id: 'reservation' },
+      { name: 'Tuscan Moto Rider', tag: 'Drop 02 Preview', spec: '1.4mm Heavy Cowhide', href: '/products/tea-core-steer-moto-jacket' },
+      { name: 'Atelier Field Overshirt', tag: 'Hand-Oiled', spec: 'Unlined Raw Suede', href: '/products' },
+      { name: 'Archive Aviator Flight', tag: 'Limited Batch', spec: 'Shearling Collar // Brass', href: '/products' },
     ],
   },
   {
@@ -185,9 +178,9 @@ const PRODUCT_TAXONOMY: ProductCategory[] = [
     title: 'Wallets & Carry',
     tagline: 'Seamless Buttero Construction',
     items: [
-      { name: 'Bespoke Folio Wallet', tag: 'Phase 02 Drop', spec: '6-Slot Bifold // Creased', id: 'archive' },
-      { name: 'Monolithic Field Duffle', tag: 'Vault Edition', spec: 'Peened Copper Rivets', id: 'patrons' },
-      { name: 'EDC Valet Catchall Tray', tag: 'Beeswax Seal', spec: 'Molded Steerhide', id: 'expansion' },
+      { name: 'Bespoke Folio Wallet', tag: 'Phase 02 Drop', spec: '6-Slot Bifold // Creased', href: '/products/bespoke-folio-wallet' },
+      { name: 'Monolithic Field Duffle', tag: 'Vault Edition', spec: 'Peened Copper Rivets', href: '/products/monolithic-field-duffle-45l' },
+      { name: 'EDC Valet Catchall Tray', tag: 'Beeswax Seal', spec: 'Molded Steerhide', href: '/products' },
     ],
   },
   {
@@ -195,30 +188,36 @@ const PRODUCT_TAXONOMY: ProductCategory[] = [
     title: 'Welted Footwear',
     tagline: 'Goodyear Welt // Oak-Bark Soles',
     items: [
-      { name: 'Channeled Welt Derby', tag: 'Drop 02 Preview', spec: 'Double Leather Sole', id: 'reservation' },
-      { name: 'Service Combat Boot', tag: 'Archival', spec: 'Vibram Commando Lug', id: 'reservation' },
+      { name: 'Channeled Welt Derby', tag: 'Drop 02 Preview', spec: 'Double Leather Sole', href: '/products/service-derby-shoes' },
+      { name: 'Service Combat Boot', tag: 'Archival', spec: 'Vibram Commando Lug', href: '/products' },
     ],
   },
 ];
 
 // ========================================================
-// 3. MAIN NAVBAR COMPONENT
+// 3. MAIN NAVBAR COMPONENT (SEO/AEO Structured)
 // ========================================================
 export default function Navbar({
-  bagCount = 0,
+  bagCount,
   onOpenBag,
   onNavigate,
 }: NavbarProps) {
+  const router = useRouter();
+  const isHydrated = useCartHydrated();
+
+  const openCart = useCartStore((state) => state.openCart);
+  const totalStoreItems = useCartStore((state) => state.getTotalItems());
+  const activeBagCount = isHydrated ? totalStoreItems : (bagCount ?? 0);
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Desktop Dropdown States
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Mobile Accordion States
-  const [mobileExpandedCat, setMobileExpandedCat] = useState<string | null>('belts');
+  // Mobile Accordion: Default null (koi bhi pre-opened nahi rahegi)
+  const [mobileExpandedCat, setMobileExpandedCat] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -236,15 +235,30 @@ export default function Navbar({
     }
   }, [isMobileMenuOpen]);
 
-  const handleLinkClick = (id: string) => {
+  const handleActionClick = (target: string, isInternalRoute = false) => {
     setIsMobileMenuOpen(false);
     setIsProductsOpen(false);
-    if (onNavigate) {
-      onNavigate(id);
-    } else {
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+
+    if (isInternalRoute) {
+      router.push(target);
+      return;
     }
+
+    if (onNavigate) {
+      onNavigate(target);
+    } else {
+      const el = document.getElementById(target);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        router.push(`/#${target}`);
+      }
+    }
+  };
+
+  const handleBagButtonClick = () => {
+    if (onOpenBag) onOpenBag();
+    openCart();
   };
 
   const handleMouseEnterProducts = () => {
@@ -260,21 +274,23 @@ export default function Navbar({
 
   return (
     <>
-      {/* GLASSMORPHIC MAIN NAVBAR */}
       <header
-        className={`fixed top-0 inset-x-0 z-40 transition-all duration-500 ${
+        role="banner"
+        className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
           isScrolled
-            ? 'bg-[#F8F8F6]/80 backdrop-blur-2xl border-b border-black/10 py-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)]'
-            : 'bg-[#F8F8F6]/90 backdrop-blur-xl border-b border-black/5 py-3.5 sm:py-4'
+            ? 'bg-[#F8F8F6]/90 backdrop-blur-2xl border-b border-black/10 py-2.5 shadow-sm'
+            : 'bg-[#F8F8F6]/95 backdrop-blur-xl border-b border-black/5 py-3.5'
         }`}
       >
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
           
           {/* BRAND LOGO */}
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => handleLinkClick('hero')}
+          <div className="flex items-center gap-5 shrink-0">
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
               className="flex items-center gap-3 group select-none cursor-pointer text-left"
+              aria-label="HIDEWOOD Atelier - Return to Home"
             >
               <div className="relative p-1.5 rounded-lg bg-black/[0.04] group-hover:bg-black/[0.08] transition-colors border border-black/5">
                 <svg
@@ -282,6 +298,7 @@ export default function Navbar({
                   viewBox="0 0 100 100"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
                 >
                   <rect x="18" y="10" width="28" height="80" rx="2" fill="currentColor" />
                   <rect x="74" y="10" width="6" height="80" rx="2" fill="currentColor" />
@@ -289,37 +306,53 @@ export default function Navbar({
                 </svg>
               </div>
               
-              <div className="flex items-baseline">
-                <TextRoll className="text-[19px] sm:text-[23px] font-black tracking-tight text-black uppercase font-sans">
+              <div className="flex items-baseline overflow-hidden h-[24px]">
+                <TextRoll className="text-[19px] sm:text-[22px] font-black tracking-tight text-black uppercase font-sans">
                   HIDEWOOD
                 </TextRoll>
                 <span className="text-[9px] font-semibold align-super ml-1 text-black/70">
                   &trade;
                 </span>
               </div>
-            </button>
+            </Link>
 
-            {/* Atelier Tagline */}
-            <div className="hidden lg:flex items-center gap-2 pl-6 border-l border-black/10 text-[11px] font-medium tracking-normal text-neutral-500">
+            {/* Atelier Heritage Tagline */}
+            <div className="hidden 2xl:flex items-center gap-2 pl-4 border-l border-black/10 text-[11px] font-medium text-neutral-500">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              <span>Series 01 &bull; Heavy Full-Grain Belts</span>
+              <span>Full-Grain Leather House &bull; Est. 2026</span>
             </div>
           </div>
 
-          {/* DESKTOP NAV LINKS WITH NESTED MULTI-TIER DROPDOWN */}
-          <nav className="hidden md:flex items-center gap-7 text-[13px] tracking-normal font-sans">
-            
-            {/* 1. ATELIER PRODUCTS (MULTI-LEVEL NESTED DROPDOWN) */}
+          {/* DESKTOP NAV LINKS (100% Unchanged) */}
+          <nav
+            role="navigation"
+            aria-label="Main Navigation"
+            className="hidden md:flex items-center gap-6 lg:gap-8 text-[13px] font-sans"
+          >
+            <Link
+              href="/products"
+              className="relative py-1 text-neutral-800 hover:text-black transition-colors group cursor-pointer"
+            >
+              <TextRoll center className="font-semibold text-black">
+                Shop All
+              </TextRoll>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black group-hover:w-full transition-all duration-300 opacity-80" />
+            </Link>
+
             <div
-              className="relative py-2"
+              className="relative py-1"
               onMouseEnter={handleMouseEnterProducts}
               onMouseLeave={handleMouseLeaveProducts}
+              aria-haspopup="true"
+              aria-expanded={isProductsOpen}
             >
               <button
+                type="button"
                 className="flex items-center gap-1 font-semibold text-black hover:text-neutral-600 transition-colors cursor-pointer group"
+                aria-label="Browse Collections by Category"
               >
                 <TextRoll center className="font-semibold text-black">
-                  Atelier Products
+                  Collections
                 </TextRoll>
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-300 ${
@@ -328,7 +361,6 @@ export default function Navbar({
                 />
               </button>
 
-              {/* FLOATING MULTI-LEVEL MEGA FLYOUT */}
               <AnimatePresence>
                 {isProductsOpen && (
                   <motion.div
@@ -336,9 +368,8 @@ export default function Navbar({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute top-full left-0 w-[580px] bg-white border border-black/15 shadow-2xl p-0 overflow-hidden flex z-50 text-black select-none mt-1"
+                    className="absolute top-full left-1/2 -translate-x-1/2 w-[620px] bg-white border border-black/15 shadow-2xl p-0 overflow-hidden flex z-50 text-black select-none mt-2"
                   >
-                    {/* Column 1: Primary Categories (Belts, Jackets, Goods, Footwear) */}
                     <div className="w-[230px] bg-neutral-50 border-r border-black/10 p-3 flex flex-col gap-1">
                       <div className="text-[9px] font-mono uppercase tracking-widest text-neutral-400 px-3 py-1 font-bold">
                         Category Index
@@ -350,7 +381,7 @@ export default function Navbar({
                           <div
                             key={cat.id}
                             onMouseEnter={() => setActiveCategoryIndex(idx)}
-                            onClick={() => handleLinkClick('archive')}
+                            onClick={() => handleActionClick('/products', true)}
                             className={`p-2.5 rounded-none cursor-pointer transition-all duration-200 flex items-center justify-between ${
                               isSelected
                                 ? 'bg-black text-white font-bold'
@@ -371,19 +402,19 @@ export default function Navbar({
                       })}
                     </div>
 
-                    {/* Column 2: Specific Sub-Category Items for active selection */}
                     <div className="flex-1 p-4 bg-white flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between pb-2 mb-3 border-b border-black/10 font-mono text-[9px] uppercase text-neutral-400">
-                          <span>{PRODUCT_TAXONOMY[activeCategoryIndex].title} // SPECIFICATIONS</span>
-                          <span className="text-red-600 font-bold">DISPATCH VERIFIED</span>
+                          <span>{PRODUCT_TAXONOMY[activeCategoryIndex].title} // ARCHIVE SPEC</span>
+                          <span className="text-red-600 font-bold">TUSCAN LOT</span>
                         </div>
 
                         <div className="flex flex-col gap-2">
                           {PRODUCT_TAXONOMY[activeCategoryIndex].items.map((sub, sIdx) => (
-                            <button
+                            <Link
                               key={sIdx}
-                              onClick={() => handleLinkClick(sub.id)}
+                              href={sub.href}
+                              onClick={() => setIsProductsOpen(false)}
                               className="p-2 border border-black/10 hover:border-black hover:bg-neutral-50 text-left transition-all group/sub flex items-center justify-between cursor-pointer"
                             >
                               <div>
@@ -397,15 +428,21 @@ export default function Navbar({
                               <span className="text-[9px] font-mono uppercase bg-neutral-200 group-hover/sub:bg-black group-hover/sub:text-white px-2 py-0.5 transition-colors">
                                 {sub.tag}
                               </span>
-                            </button>
+                            </Link>
                           ))}
                         </div>
                       </div>
 
-                      {/* Dropdown Mini Footer Banner */}
                       <div className="pt-3 border-t border-black/10 flex items-center justify-between font-mono text-[9px] text-neutral-500 uppercase mt-4">
-                        <span>EST. 2026 TUSCAN HIDE</span>
-                        <span className="text-black font-bold">100 YR INTEGRITY BOND</span>
+                        <Link
+                          href="/products"
+                          onClick={() => setIsProductsOpen(false)}
+                          className="text-black font-bold hover:underline flex items-center gap-1"
+                        >
+                          <span>Explore Full Registry</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </Link>
+                        <span>100 YR INTEGRITY BOND</span>
                       </div>
                     </div>
                   </motion.div>
@@ -413,89 +450,91 @@ export default function Navbar({
               </AnimatePresence>
             </div>
 
-            {/* 2. CRAFT ANATOMY LINK */}
-            <button
-              onClick={() => handleLinkClick('anatomy')}
-              className="relative py-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
+            <Link
+              href="/provenance"
+              className="relative py-1 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
             >
               <TextRoll center className="font-medium text-black">
-                Craft Anatomy
+                Brand Story
               </TextRoll>
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1.5px] bg-black group-hover:w-full transition-all duration-300 ease-out opacity-80" />
-            </button>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black group-hover:w-full transition-all duration-300 opacity-80" />
+            </Link>
 
-            {/* 3. PATRON LOGS / REVIEWS */}
-            <button
-              onClick={() => handleLinkClick('patrons')}
-              className="relative py-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
+            <Link
+              href="/contact"
+              className="relative py-1 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
             >
               <TextRoll center className="font-medium text-black">
-                Patron Logs
+                Contact Desk
               </TextRoll>
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1.5px] bg-black group-hover:w-full transition-all duration-300 ease-out opacity-80" />
-            </button>
-
-            {/* 4. PHASE 02 DROP RESERVATION */}
-            <button
-              onClick={() => handleLinkClick('reservation')}
-              className="relative py-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer flex items-center gap-1"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-              <TextRoll center className="font-semibold text-black">
-                Phase 02 Drop
-              </TextRoll>
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1.5px] bg-black group-hover:w-full transition-all duration-300 ease-out opacity-80" />
-            </button>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black group-hover:w-full transition-all duration-300 opacity-80" />
+            </Link>
           </nav>
 
-          {/* RIGHT ACTIONS */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            {/* Bag Button */}
-            <button
-              onClick={onOpenBag}
-              className="group relative flex items-center gap-2.5 bg-neutral-950 hover:bg-black text-white px-3.5 sm:px-4 py-2 rounded-full text-xs font-medium tracking-tight transition-all duration-300 cursor-pointer shadow-sm backdrop-blur-md border border-white/10 active:scale-95"
-              aria-label="Shopping Bag"
+          {/* RIGHT ACTIONS: PROPORTIONATE & CLEAN */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Link
+              href="/login"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono text-neutral-700 hover:text-black transition-colors py-1.5 px-2.5 border border-black/10 hover:border-black bg-white"
+              aria-label="Patron Sign-In Chamber"
             >
-              <ShoppingBag className="w-3.5 h-3.5 text-white/90 group-hover:text-white transition-transform duration-200 group-hover:-translate-y-0.5" />
-              <TextRoll className="hidden sm:inline-block text-[11px] font-semibold text-white">
-                Bag
-              </TextRoll>
+              <User className="w-3.5 h-3.5 text-neutral-600" />
+              <span className="font-bold text-[11px] uppercase tracking-wide">Sign In</span>
+            </Link>
+
+            <Link
+              href="/orders"
+              className="hidden lg:inline-flex items-center gap-1.5 text-xs font-mono text-neutral-700 hover:text-black transition-colors py-1.5 px-2.5 border border-black/10 hover:border-black bg-white"
+              aria-label="Patron Orders and Keycard Access"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-neutral-600" />
+              <span className="font-bold text-[11px] uppercase tracking-wide">Orders</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleBagButtonClick}
+              className="group relative flex items-center gap-2 bg-neutral-950 hover:bg-black text-white px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer shadow-sm active:scale-95"
+              aria-label={`Shopping Bag containing ${activeBagCount} items`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5 text-white/90" />
+              <span className="hidden sm:inline-block text-[11px] font-semibold text-white">Bag</span>
               <span className="bg-white text-black font-bold px-1.5 py-0.2 rounded-full text-[10px]">
-                {bagCount}
+                {activeBagCount}
               </span>
             </button>
 
-            {/* Dispatch Concierge Link */}
-            <button
-              onClick={() => handleLinkClick('reservation')}
-              className="hidden lg:inline-flex items-center gap-1 text-[13px] font-medium text-neutral-800 hover:text-black transition-all pl-2 cursor-pointer font-sans"
+            {/* Desktop Dispatch: Direct Phase 02 Reservation Vault Navigation */}
+            <Link
+              href="/reservation"
+              className="hidden xl:inline-flex items-center gap-1 text-[12px] font-medium text-neutral-800 hover:text-black pl-1 cursor-pointer font-sans"
+              aria-label="Direct Phase 02 Dispatch Concierge"
             >
-              <TextRoll className="font-medium text-black">
-                Dispatch
-              </TextRoll>
-              <ArrowUpRight className="w-3.5 h-3.5 ml-0.5 opacity-60" />
-            </button>
+              <span className="font-semibold text-black">Dispatch</span>
+              <ArrowUpRight className="w-3 h-3 opacity-60" />
+            </Link>
 
             {/* Mobile Hamburger Button */}
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex md:hidden flex-col justify-center items-center w-10 h-10 rounded-full border border-black/10 bg-white/70 backdrop-blur-xl shadow-xs gap-1.5 z-50 cursor-pointer active:scale-90 transition-all"
-              aria-label="Toggle Mobile Menu"
+              className="flex md:hidden flex-col justify-center items-center w-9 h-9 rounded-full border border-black/10 bg-white/70 backdrop-blur-xl shadow-xs gap-1.5 z-50 cursor-pointer active:scale-90 transition-all"
+              aria-label="Toggle Navigation Menu"
+              aria-expanded={isMobileMenuOpen}
             >
               <span
-                className={`w-5 h-[2px] bg-black transition-all duration-300 ease-out ${
-                  isMobileMenuOpen ? 'rotate-45 translate-y-[8px]' : ''
+                className={`w-4 h-[1.5px] bg-black transition-all duration-300 ease-out ${
+                  isMobileMenuOpen ? 'rotate-45 translate-y-[7px]' : ''
                 }`}
               />
               <span
-                className={`w-5 h-[2px] bg-black transition-all duration-200 ${
+                className={`w-4 h-[1.5px] bg-black transition-all duration-200 ${
                   isMobileMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100'
                 }`}
               />
               <span
-                className={`w-5 h-[2px] bg-black transition-all duration-300 ease-out ${
-                  isMobileMenuOpen ? '-rotate-45 -translate-y-[8px]' : ''
+                className={`w-4 h-[1.5px] bg-black transition-all duration-300 ease-out ${
+                  isMobileMenuOpen ? '-rotate-45 -translate-y-[7px]' : ''
                 }`}
               />
             </button>
@@ -504,43 +543,83 @@ export default function Navbar({
         </div>
       </header>
 
-      {/* MOBILE FULL-SCREEN ACCORDION & DIRECTORY OVERLAY */}
+      {/* MOBILE FULL-SCREEN ATELIER DRAWER OVERLAY (Streamlined & Bottom-to-Top Kinetic Reveal) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(32px)' }}
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            transition={{ duration: 0.35 }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-30 bg-black/95 text-white flex flex-col justify-between px-5 pt-24 pb-8 md:hidden select-none overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile Navigation Drawer"
           >
             {/* Top Sub-Header */}
-            <div className="flex justify-between items-center text-xs tracking-tight text-neutral-400 border-b border-white/10 pb-3">
-              <span>Directory</span>
+            <div className="flex justify-between items-center text-[11px] font-mono uppercase tracking-tight text-neutral-400 border-b border-white/10 pb-3">
+              <span>Directory // Index</span>
               <span>HIDEWOOD &bull; Atelier 2026</span>
             </div>
 
-            {/* ACCORDION CATEGORIES & NESTED SUBS */}
-            <div className="flex flex-col gap-4 my-6">
+            {/* 1. Mobile Primary Direct Links (Redundant Bag Button removed) */}
+            <div className="flex flex-col gap-2 my-4 pt-2">
+              <Link
+                href="/products"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-3 px-3 bg-white/5 border border-white/10 flex items-center justify-between text-base font-bold uppercase tracking-tight text-white active:bg-white active:text-black transition-colors"
+              >
+                <span>Shop All Pieces (Catalogue)</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
+
+              <Link
+                href="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-2.5 px-3 bg-white/5 border border-white/10 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-white active:bg-white active:text-black transition-colors font-mono"
+              >
+                <span className="flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-neutral-300" />
+                  Patron Sign In / Register
+                </span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+
+              <Link
+                href="/orders"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-2.5 px-3 bg-white/10 border border-white/20 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-emerald-400 active:bg-white active:text-black transition-colors font-mono"
+              >
+                <span className="flex items-center gap-2">
+                  <KeyRound className="w-3.5 h-3.5" />
+                  Patron Orders &amp; Archival Ledger
+                </span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* 2. ACCORDION CATEGORIES & NESTED SUBS (Bottom-to-Top Kinetic Letters, None Pre-Opened) */}
+            <div className="flex flex-col gap-3 my-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">
-                // SELECT CATEGORY & SILHOUETTE
+                // ATELIER SILHOUETTES
               </span>
 
               {PRODUCT_TAXONOMY.map((cat, idx) => {
                 const isExpanded = mobileExpandedCat === cat.id;
                 return (
-                  <div key={cat.id} className="border-b border-white/10 pb-3">
+                  <div key={cat.id} className="border-b border-white/10 pb-2.5">
                     <button
                       onClick={() => setMobileExpandedCat(isExpanded ? null : cat.id)}
                       className="w-full flex items-center justify-between text-left py-1 cursor-pointer"
+                      aria-expanded={isExpanded}
                     >
                       <div className="flex items-baseline gap-3">
                         <span className="text-xs font-mono text-neutral-500 font-bold">0{idx + 1}</span>
-                        <h3 className="text-2xl font-bold tracking-tight text-white uppercase">
+                        <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
                           <DirectionalTextReveal
                             text={cat.title}
                             isOpen={isMobileMenuOpen}
-                            baseDelay={0.08 + idx * 0.05}
+                            baseDelay={0.05 + idx * 0.04}
                           />
                         </h3>
                       </div>
@@ -551,7 +630,6 @@ export default function Navbar({
                       />
                     </button>
 
-                    {/* Sub Category Items Accordion Drawer */}
                     <AnimatePresence>
                       {isExpanded && (
                         <motion.div
@@ -559,12 +637,13 @@ export default function Navbar({
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.25 }}
-                          className="flex flex-col gap-2 pt-3 pl-6 overflow-hidden"
+                          className="flex flex-col gap-2 pt-2.5 pl-4 sm:pl-6 overflow-hidden"
                         >
                           {cat.items.map((sub, sIdx) => (
-                            <button
+                            <Link
                               key={sIdx}
-                              onClick={() => handleLinkClick(sub.id)}
+                              href={sub.href}
+                              onClick={() => setIsMobileMenuOpen(false)}
                               className="p-2.5 bg-neutral-900 border border-white/10 text-left flex items-center justify-between cursor-pointer active:bg-white active:text-black transition-colors"
                             >
                               <div>
@@ -574,7 +653,7 @@ export default function Navbar({
                               <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 border border-white/20">
                                 {sub.tag}
                               </span>
-                            </button>
+                            </Link>
                           ))}
                         </motion.div>
                       )}
@@ -583,40 +662,43 @@ export default function Navbar({
                 );
               })}
 
-              {/* Direct Quick Sections */}
-              <div className="pt-2 flex flex-col gap-3 font-mono text-xs uppercase">
-                <button
-                  onClick={() => handleLinkClick('anatomy')}
-                  className="flex items-center justify-between py-2 border-b border-white/10 text-neutral-300"
+              {/* 3. Direct Story, Concierge & Dispatch Key Links */}
+              <div className="pt-3 flex flex-col gap-2.5 font-mono text-xs uppercase">
+                <Link
+                  href="/provenance"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between py-2 border-b border-white/10 text-neutral-300 text-left"
                 >
-                  <span>// Craft Anatomy Protocol</span>
+                  <span>// Brand Story &amp; Heritage</span>
                   <ArrowUpRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleLinkClick('patrons')}
-                  className="flex items-center justify-between py-2 border-b border-white/10 text-neutral-300"
+                </Link>
+                <Link
+                  href="/contact"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between py-2 border-b border-white/10 text-neutral-300 text-left"
                 >
-                  <span>// Patron Wear Records</span>
+                  <span>// Concierge Contact Desk</span>
                   <ArrowUpRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleLinkClick('reservation')}
-                  className="flex items-center justify-between py-2 border-b border-white/10 text-red-500 font-bold"
+                </Link>
+                <Link
+                  href="/reservation"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between py-2 border-b border-white/10 text-red-500 font-bold text-left"
                 >
                   <span>// Reserve Phase 02 Dispatch Key</span>
                   <ArrowUpRight className="w-4 h-4" />
-                </button>
+                </Link>
               </div>
             </div>
 
-            {/* Bottom Glass Concierge Card */}
-            <div className="border border-white/10 p-3.5 bg-white/[0.04] backdrop-blur-md flex flex-col gap-1 text-xs text-neutral-300">
+            {/* Bottom Proof Concierge Card */}
+            <div className="border border-white/10 p-3.5 bg-white/[0.04] backdrop-blur-md flex flex-col gap-1 text-xs text-neutral-300 mt-3">
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400 text-xs font-mono">CONCIERGE DESK</span>
+                <span className="text-neutral-400 text-xs font-mono">DIRECT ATELIER DESK</span>
                 <span className="text-white font-mono text-xs">dispatch@hidewood.com</span>
               </div>
               <p className="text-[10px] font-mono text-neutral-500 pt-1 border-t border-white/5">
-                4.2mm Tuscan Bovine &bull; Sand-Cast Brass Metallurgy
+                Kanpur Artisanal Bench &bull; Tuscan Bark-Tanned Steerhide
               </p>
             </div>
           </motion.div>

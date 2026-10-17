@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { ArrowUpRight, Compass, ShieldCheck } from 'lucide-react';
 
@@ -127,13 +128,13 @@ export default function Footer() {
             <ul className="space-y-2.5 text-xs sm:text-sm font-semibold tracking-tight uppercase">
               {['Series 01 Belts', 'Wallets & EDC', 'Monolithic Bags', 'Outerwear Atelier', 'Footwear Welt'].map((item) => (
                 <li key={item}>
-                  <a
-                    href="#archive"
+                  <Link
+                    href="/products"
                     className="group inline-flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
                   >
                     <span>{item}</span>
                     <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -145,28 +146,72 @@ export default function Footer() {
               PROVENANCE & PROTOCOL
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm font-semibold tracking-tight uppercase">
-              {['Tuscan Vegetal Tannage', 'Sand-Cast Molten Brass', 'Beeswax Glass Burnish', 'Care & Conditioning', 'Patina Registry'].map((item) => (
-                <li key={item}>
-                  <a
-                    href="#anatomy"
-                    className="group inline-flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
-                  >
-                    <span>{item}</span>
-                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                </li>
-              ))}
+              <li>
+                <Link
+                  href="/provenance"
+                  className="group inline-flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
+                >
+                  <span>Tuscan Vegetal Tannage</span>
+                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/provenance"
+                  className="group inline-flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
+                >
+                  <span>Sand-Cast Molten Brass</span>
+                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="group inline-flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
+                >
+                  <span>100-Yr Warranty Bond</span>
+                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="group inline-flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
+                >
+                  <span>Terms of Dispatch</span>
+                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/provenance"
+                  className="group inline-flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
+                >
+                  <span>Patina Registry</span>
+                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Concierge & Logistics */}
+          {/* Concierge & Logistics (Includes Direct Orders Link) */}
           <div className="md:col-span-3">
             <h4 className="font-mono text-[10px] uppercase text-neutral-500 tracking-widest mb-4">
-              CONCIERGE DESK
+              CONCIERGE &amp; PATRON DESK
             </h4>
             <div className="text-xs sm:text-sm text-neutral-300 space-y-2 font-mono">
               <p>dispatch@hidewood.com</p>
-              <p>WhatsApp Concierge: +91 91400 00000</p>
+              
+              {/* DIRECT ORDERS PORTAL LINK */}
+              <div className="pt-1">
+                <Link
+                  href="/orders"
+                  className="text-white font-bold underline hover:text-neutral-300 flex items-center gap-1 text-xs uppercase"
+                >
+                  <span>Track Commissions &amp; Keycard &rarr;</span>
+                </Link>
+              </div>
+
               <p className="text-neutral-500 text-[11px] pt-1 font-sans">
                 Mon-Sat 10:00 to 19:00 IST &bull; Studio Visits by Appointment Only.
               </p>
@@ -196,12 +241,10 @@ export default function Footer() {
             }}
             className="w-full text-center cursor-default select-none"
           >
-            {/* Top Micro Legend */}
             <span className="font-mono text-[9px] sm:text-xs text-neutral-500 uppercase tracking-[0.3em] block mb-2 sm:mb-3">
               HEIRLOOM LEATHER HOUSE &bull; BUILT TO OUTLIVE GENERATIONS
             </span>
 
-            {/* Giant Monolith 3D Metallic Typography */}
             <motion.h1
               style={{ translateZ: textTranslateZ }}
               className="text-[17vw] leading-[0.82] font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-300 to-neutral-700"
@@ -209,7 +252,6 @@ export default function Footer() {
               HIDEWOOD
             </motion.h1>
 
-            {/* Simulated 3D Cast Shadow / Mirror Reflex */}
             <div className="opacity-15 blur-xs text-[17vw] leading-[0.82] font-black uppercase tracking-tighter text-white -scale-y-100 select-none pointer-events-none mt-[-2vw]">
               HIDEWOOD
             </div>
@@ -225,11 +267,21 @@ export default function Footer() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="hover:text-white cursor-pointer transition-colors">PRIVACY CODE</span>
+            <Link href="/orders" className="hover:text-white cursor-pointer transition-colors">
+              PATRON CIPHER
+            </Link>
             <span>&bull;</span>
-            <span className="hover:text-white cursor-pointer transition-colors">TERMS OF DISPATCH</span>
+            <Link href="/privacy" className="hover:text-white cursor-pointer transition-colors">
+              PRIVACY CODE
+            </Link>
             <span>&bull;</span>
-            <span className="hover:text-white cursor-pointer transition-colors">BESPOKE AUDIT</span>
+            <Link href="/terms" className="hover:text-white cursor-pointer transition-colors">
+              TERMS OF DISPATCH
+            </Link>
+            <span>&bull;</span>
+            <Link href="/provenance" className="hover:text-white cursor-pointer transition-colors">
+              BESPOKE AUDIT
+            </Link>
           </div>
         </div>
 

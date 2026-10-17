@@ -166,12 +166,13 @@ function InteractiveTile({ item }: { item: ReviewTile }) {
       transition={{ duration: 0.15 }}
       className="relative w-full bg-neutral-900 border border-white/15 overflow-hidden cursor-pointer select-none group shadow-2xl"
     >
-      {/* Background Piece Photo */}
+      {/* Background Piece Photo - Natural Leather Color (Grayscale Removed) */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-950">
         <img
           src={item.image}
-          alt={item.name}
-          className="w-full h-full object-cover grayscale contrast-125 transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105 brightness-90"
+          alt={`${item.name} - ${item.piece}`}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent pointer-events-none" />
 
@@ -218,6 +219,7 @@ export default function TiltedTilesReviews() {
     <section
       ref={containerRef}
       id="patrons"
+      aria-label="Atelier Patron Field Reviews & Provenance"
       className="relative w-screen left-1/2 -translate-x-1/2 pt-10 sm:pt-16 pb-24 sm:pb-36 bg-[#0E0E0E] text-white overflow-hidden select-none"
     >
       <div className="w-full px-3 sm:px-6 md:px-8 mb-8 sm:mb-12">
@@ -243,7 +245,7 @@ export default function TiltedTilesReviews() {
         {/* Tilted Isometric Transform Container */}
         <div className="relative w-[130%] sm:w-[120%] lg:w-[110%] flex gap-4 sm:gap-6 lg:gap-8 justify-center [transform:rotate(-10deg)_skewY(4deg)_scale(1.05)]">
           
-          {/* Column 1: Smooth Continuous Infinite Loop (Upar se Neeche: -33.333333% se 0%) */}
+          {/* Column 1: Smooth Continuous Infinite Loop */}
           <motion.div
             animate={{ y: ['-33.333333%', '0%'] }}
             transition={{
@@ -258,7 +260,7 @@ export default function TiltedTilesReviews() {
             ))}
           </motion.div>
 
-          {/* Column 2: Smooth Continuous Infinite Loop (Opposite: Neeche se Upar: 0% se -33.333333%) */}
+          {/* Column 2: Opposite Smooth Continuous Infinite Loop */}
           <motion.div
             animate={{ y: ['0%', '-33.333333%'] }}
             transition={{
@@ -273,7 +275,7 @@ export default function TiltedTilesReviews() {
             ))}
           </motion.div>
 
-          {/* Column 3: Smooth Continuous Infinite Loop (Same as Left: Upar se Neeche: -33.333333% se 0%) */}
+          {/* Column 3: Smooth Continuous Infinite Loop */}
           <motion.div
             animate={{ y: ['-33.333333%', '0%'] }}
             transition={{

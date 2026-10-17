@@ -254,14 +254,13 @@ export default function CategoryRunway({
 
   return (
     <>
-      {/* ZERO BORDER LINE + TIGHT BOTTOM PADDING (pb-4 sm:pb-6) */}
       <section
         ref={sectionRef}
         id="categories"
+        aria-label="Atelier Craft Disciplines & Categories"
         className="relative w-screen left-1/2 -translate-x-1/2 pt-1 pb-4 sm:pb-6 select-none overflow-hidden"
       >
         <div className="w-full px-2 sm:px-4 md:px-6">
-          {/* SHOP BY CATEGORIES SUB-BAR (No extra border line) */}
           <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-2 pb-3 mb-4 sm:mb-6 font-sans">
             <div className="flex items-center gap-2 sm:gap-2.5">
               <span className="w-2 h-2 rounded-full bg-black animate-pulse shrink-0" />
@@ -274,7 +273,6 @@ export default function CategoryRunway({
             </p>
           </div>
 
-          {/* MAIN CATEGORIES DISPLAY */}
           <motion.div
             initial={{ clipPath: 'inset(0% 100% 0% 0%)', opacity: 0, x: -20 }}
             animate={
@@ -285,7 +283,7 @@ export default function CategoryRunway({
             transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
-            {/* 1. MOBILE-DEDICATED FULL-CARD TOUCH LAYOUT */}
+            {/* 1. MOBILE TOUCH CARDS (Natural Color Restored) */}
             <div className="flex md:hidden flex-col gap-3 w-full">
               {CATEGORIES_DATA.map((cat) => {
                 const isLive = cat.status === 'In Stock';
@@ -298,13 +296,14 @@ export default function CategoryRunway({
                     <img
                       src={cat.image}
                       alt={cat.name}
-                      className="w-full h-full object-cover grayscale contrast-125 brightness-75"
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1200&auto=format&fit=crop';
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/20 pointer-events-none" />
 
                     <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-white font-mono text-[9px] uppercase">
                       <span className="bg-black/80 px-2 py-0.5 border border-white/15 font-bold">
@@ -341,7 +340,7 @@ export default function CategoryRunway({
               })}
             </div>
 
-            {/* 2. DESKTOP HARMONIOUS ACCORDION */}
+            {/* 2. DESKTOP ACCORDION (Natural Color Restored) */}
             <div className="hidden md:flex flex-row w-full gap-3 lg:gap-4 items-stretch">
               {CATEGORIES_DATA.map((cat, idx) => {
                 const isSelected = activeCard === idx;
@@ -364,14 +363,15 @@ export default function CategoryRunway({
                     <img
                       src={cat.image}
                       alt={cat.name}
-                      className="w-full h-full object-cover grayscale contrast-125 transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1200&auto=format&fit=crop';
                       }}
                     />
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/25 pointer-events-none" />
 
                     <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-white font-mono text-[10px] uppercase">
                       <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 border border-white/10 font-bold shrink-0">
@@ -519,10 +519,12 @@ export default function CategoryRunway({
                     </div>
 
                     <div className="relative aspect-[4/3] w-full bg-neutral-900 overflow-hidden border border-white/10 mb-2.5 sm:mb-3">
+                      {/* Natural Leather Color (Grayscale removed) */}
                       <img
                         src={sub.image}
                         alt={sub.name}
-                        className="w-full h-full object-cover grayscale contrast-125 transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src =
                             'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=600&auto=format&fit=crop';

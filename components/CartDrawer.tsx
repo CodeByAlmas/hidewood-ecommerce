@@ -1,41 +1,31 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ArrowUpRight, ShieldCheck, Truck, ShoppingBag } from 'lucide-react';
 import { TextRoll } from './Navbar';
+import { useCartStore } from '@/store/useCartStore';
+import { useCartHydrated } from '@/hooks/useCartHydrated';
 
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  size: string;
-  quantity: number;
-  image: string;
-  category: string;
-}
+export default function CartDrawer() {
+  const router = useRouter();
+  const isHydrated = useCartHydrated();
 
-interface CartDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  items: CartItem[];
-  onUpdateQuantity: (id: string, size: string, delta: number) => void;
-  onRemoveItem: (id: string, size: string) => void;
-  onCheckout: () => void;
-}
+  const {
+    isOpen,
+    closeCart,
+    items,
+    updateQuantity,
+    removeItem,
+    getSubtotal,
+    getTotalItems,
+  } = useCartStore();
 
-export default function CartDrawer({
-  isOpen,
-  onClose,
-  items,
-  onUpdateQuantity,
-  onRemoveItem,
-  onCheckout,
-}: CartDrawerProps) {
-  // ESC key to close drawer & lock body scroll when open
+  // ESC key listener & body scroll lock
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closeCart();
     };
 
     if (isOpen) {
@@ -49,11 +39,19 @@ export default function CartDrawer({
       document.body.style.overflow = 'unset';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, closeCart]);
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const freeShippingThreshold = 150;
+  const activeItems = isHydrated ? items : [];
+  const subtotal = isHydrated ? getSubtotal() : 0;
+  const totalCount = isHydrated ? getTotalItems() : 0;
+
+  const freeShippingThreshold = 5000;
   const progressToFreeShipping = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+
+  const handleProceedToCheckout = () => {
+    closeCart();
+    router.push('/cart');
+  };
 
   return (
     <AnimatePresence>
@@ -65,7 +63,7 @@ export default function CartDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            onClick={onClose}
+            onClick={closeCart}
             className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
           />
 
@@ -82,12 +80,12 @@ export default function CartDrawer({
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
                 <h2 className="text-xs uppercase tracking-widest font-black font-sans text-black">
-                  Atelier Dispatch Bag ({items.reduce((sum, item) => sum + item.quantity, 0)})
+                  Atelier Dispatch Bag ({totalCount})
                 </h2>
               </div>
 
               <button
-                onClick={onClose}
+                onClick={closeCart}
                 className="p-2 border border-black/10 hover:border-black hover:bg-neutral-100 transition-colors cursor-pointer group"
                 aria-label="Close Bag"
               >
@@ -102,11 +100,11 @@ export default function CartDrawer({
                   <Truck className="w-3.5 h-3.5 text-black" />
                   {subtotal >= freeShippingThreshold ? (
                     <span className="font-bold text-black uppercase">
-                      Complimentary Global Courier Unlocked
+                      Complimentary Air Express Unlocked
                     </span>
                   ) : (
                     <span>
-                      Add <strong className="text-black font-bold">${freeShippingThreshold - subtotal}.00</strong> for Free Global Shipping
+                      Add <strong className="text-black font-bold">₹{(freeShippingThreshold - subtotal).toLocaleString('en-IN')}</strong> for Free Air Shipping
                     </span>
                   )}
                 </span>
@@ -124,18 +122,18 @@ export default function CartDrawer({
 
             {/* 3. CART ITEMS LIST */}
             <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 divide-y divide-black/10">
-              {items.length === 0 ? (
+              {activeItems.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-16 text-neutral-400">
                   <ShoppingBag className="w-12 h-12 stroke-[1] mb-3 text-neutral-300" />
                   <p className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-1">
                     Your bag is empty
                   </p>
                   <p className="text-[11px] text-neutral-400 max-w-[220px]">
-                    No handcrafted items commissioned yet.
+                    No handcrafted pieces commissioned yet.
                   </p>
                 </div>
               ) : (
-                items.map((item) => (
+                activeItems.map((item) => (
                   <div key={`${item.id}-${item.size}`} className="pt-4 first:pt-0 flex gap-4">
                     {/* THUMBNAIL */}
                     <div className="relative w-20 h-24 sm:w-22 sm:h-26 bg-neutral-200 border border-black/10 shrink-0 overflow-hidden">
@@ -159,7 +157,7 @@ export default function CartDrawer({
                             </h3>
                           </div>
                           <span className="text-xs font-mono font-bold text-black">
-                            ${item.price * item.quantity}.00
+                            ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                           </span>
                         </div>
 
@@ -174,7 +172,7 @@ export default function CartDrawer({
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center border border-black/20 bg-white">
                           <button
-                            onClick={() => onUpdateQuantity(item.id, item.size, -1)}
+                            onClick={() => updateQuantity(item.id, item.size, -1)}
                             className="p-1.5 hover:bg-neutral-100 cursor-pointer"
                             aria-label="Decrease quantity"
                           >
@@ -184,7 +182,7 @@ export default function CartDrawer({
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => onUpdateQuantity(item.id, item.size, 1)}
+                            onClick={() => updateQuantity(item.id, item.size, 1)}
                             className="p-1.5 hover:bg-neutral-100 cursor-pointer"
                             aria-label="Increase quantity"
                           >
@@ -193,7 +191,7 @@ export default function CartDrawer({
                         </div>
 
                         <button
-                          onClick={() => onRemoveItem(item.id, item.size)}
+                          onClick={() => removeItem(item.id, item.size)}
                           className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 hover:text-black transition-colors cursor-pointer underline"
                         >
                           Remove
@@ -206,37 +204,34 @@ export default function CartDrawer({
             </div>
 
             {/* 4. FOOTER / CHECKOUT BAR */}
-            {items.length > 0 && (
+            {activeItems.length > 0 && (
               <div className="p-5 sm:p-6 border-t border-black/10 bg-white space-y-4">
-                {/* SUB-TOTAL BREAKDOWN */}
                 <div className="space-y-1.5 text-xs font-mono">
                   <div className="flex justify-between text-neutral-500">
                     <span>Atelier Subtotal</span>
-                    <span className="font-bold text-black">${subtotal}.00</span>
+                    <span className="font-bold text-black">₹{subtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-neutral-500">
                     <span>Express Dispatch</span>
                     <span className="font-semibold text-black">
-                      {subtotal >= freeShippingThreshold ? 'Complimentary' : '$15.00'}
+                      {subtotal >= freeShippingThreshold ? 'Complimentary' : '₹450'}
                     </span>
                   </div>
                   <div className="pt-2 border-t border-black/10 flex justify-between text-sm font-sans font-black text-black">
                     <span className="uppercase tracking-tight">Total Valuation</span>
-                    <span className="font-mono">
-                      ${subtotal >= freeShippingThreshold ? subtotal : subtotal + 15}.00
+                    <span className="font-mono text-red-600">
+                      ₹{(subtotal >= freeShippingThreshold ? subtotal : subtotal + 450).toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>
 
-                {/* TRUST BADGE PILL */}
                 <div className="flex items-center gap-2 p-2.5 bg-neutral-50 border border-black/10 text-[10px] text-neutral-600 font-mono">
                   <ShieldCheck className="w-4 h-4 text-black shrink-0" />
                   <span>Backed by HIDEWOOD 100-Year Heritage Guarantee</span>
                 </div>
 
-                {/* CHECKOUT BUTTON WITH ROTATING 90° ARROW */}
                 <button
-                  onClick={onCheckout}
+                  onClick={handleProceedToCheckout}
                   className="group w-full bg-black text-white py-4 px-6 text-xs uppercase font-bold tracking-widest hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >
                   <TextRoll className="text-white font-bold">

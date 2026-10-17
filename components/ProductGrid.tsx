@@ -22,7 +22,6 @@ interface ProductGridProps {
 }
 
 const CATALOG_ITEMS: Product[] = [
-  // ROW 1: 4 Equal Items
   {
     id: 'hw-01',
     name: 'The Bridle Edition',
@@ -79,7 +78,6 @@ const CATALOG_ITEMS: Product[] = [
       'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
     ]
   },
-  // ROW 2: 2 Compact Items + 1 Giant Showcase
   {
     id: 'hw-05',
     name: 'Archival Field Backpack',
@@ -122,7 +120,6 @@ const CATALOG_ITEMS: Product[] = [
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1200&auto=format&fit=crop'
     ]
   },
-  // ROW 3: 1 Giant Showcase + 2 Companion Items
   {
     id: 'hw-08',
     name: 'Monolithic Field Duffle 45L',
@@ -186,20 +183,18 @@ function ProductItem({
       onMouseLeave={() => setIsHovered(false)}
       className="group flex flex-col justify-between cursor-pointer w-full select-none"
     >
-      {/* ZERO BORDER / ZERO OUTLINE IMAGE BOX */}
       <div className={`relative ${aspect} w-full overflow-hidden bg-neutral-200/50 mb-2.5`}>
-        {/* Primary Image: Base Layer */}
+        {/* Natural Leather Color (Grayscale removed) */}
         <img
           src={prod.images[0]}
           alt={prod.name}
-          className="absolute inset-0 w-full h-full object-cover grayscale contrast-125 pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-transform duration-500 group-hover:scale-102"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1000&auto=format&fit=crop';
           }}
         />
 
-        {/* Secondary Image: Left se right slide in hoti hai (Strictly no bleed line artifact) */}
         {hasSecondary && (
           <motion.img
             src={prod.images[1]}
@@ -210,7 +205,7 @@ function ProductItem({
               opacity: isHovered ? 1 : 0,
             }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-0 w-full h-full object-cover grayscale contrast-125 z-10 pointer-events-none"
+            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
             style={{
               visibility: isHovered ? 'visible' : 'hidden',
             }}
@@ -218,7 +213,6 @@ function ProductItem({
         )}
       </div>
 
-      {/* MINIMAL BOTTOM TEXT ROW */}
       <div className="flex items-baseline justify-between gap-2 font-mono text-[11px] sm:text-xs">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0" />
@@ -237,7 +231,6 @@ function ProductItem({
   );
 }
 
-// 100% Reliable Left-to-Right Row Reveal on Scroll (Zero blank white-screen bug)
 function RevealRow({
   children,
   className = '',
@@ -267,8 +260,6 @@ export default function ProductGrid({
       className="relative w-screen left-1/2 -translate-x-1/2 pt-4 pb-20 sm:pb-28 overflow-hidden select-none"
     >
       <div className="w-full px-3 sm:px-6 md:px-8">
-        
-        {/* NEW ARRIVALS HEADLINE SUB-BAR */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -287,10 +278,7 @@ export default function ProductGrid({
           </p>
         </motion.div>
 
-        {/* DYNAMIC 3-ROW GRID (INDEPENDENT ROW-BY-ROW SCROLL REVEAL) */}
         <div className="flex flex-col gap-10 sm:gap-14 w-full">
-          
-          {/* ROW 1: 4 EQUAL PRODUCTS */}
           <RevealRow className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full">
             {CATALOG_ITEMS.slice(0, 4).map((item) => (
               <ProductItem
@@ -302,7 +290,6 @@ export default function ProductGrid({
             ))}
           </RevealRow>
 
-          {/* ROW 2: 2 COMPACT LEFT + 1 GIANT STATEMENT CARD RIGHT */}
           <RevealRow className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start">
             <div className="md:col-span-5 grid grid-cols-2 gap-4 sm:gap-6">
               <ProductItem
@@ -326,7 +313,6 @@ export default function ProductGrid({
             </div>
           </RevealRow>
 
-          {/* ROW 3: 1 GIANT STATEMENT CARD LEFT + 2 COMPANION ITEMS RIGHT */}
           <RevealRow className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start">
             <div className="md:col-span-7">
               <ProductItem
@@ -349,7 +335,6 @@ export default function ProductGrid({
               />
             </div>
           </RevealRow>
-
         </div>
       </div>
     </section>

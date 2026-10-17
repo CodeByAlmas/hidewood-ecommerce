@@ -71,7 +71,6 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
     };
   }, [isReady]);
 
-  // Handle video playback on channel switch
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
@@ -99,15 +98,12 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
   };
 
   return (
-    /* TOP BLACK BORDER REMOVED (border-t-2 border-black deleted) */
     <section
       ref={sectionRef}
       id="film"
       className="relative w-screen left-1/2 -translate-x-1/2 pt-6 sm:pt-10 pb-16 sm:pb-24 select-none overflow-hidden"
     >
       <div className="w-full px-2 sm:px-4 md:px-6">
-        
-        {/* SECTION TOP SUB-BAR & MULTI-CHANNEL SWITCHER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-black/10 mb-6 sm:mb-8 font-sans">
           <div className="flex items-center gap-2 sm:gap-2.5">
             <span className="w-2 h-2 rounded-full bg-black animate-pulse shrink-0" />
@@ -116,7 +112,6 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
             </h2>
           </div>
 
-          {/* CHANNEL SWITCHER TABS: Mobile-friendly horizontal scroll track */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {CHANNELS.map((ch, idx) => {
               const Icon = ch.icon;
@@ -143,7 +138,6 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
           </div>
         </div>
 
-        {/* FULL-BLEED CINEMATIC FRAME: Responsive Aspect Ratio */}
         <motion.div
           initial={{ clipPath: 'inset(0% 100% 0% 0%)', opacity: 0, x: -20 }}
           animate={
@@ -154,7 +148,7 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
           transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
           className="relative w-full aspect-[4/5] sm:aspect-[16/9] lg:aspect-[21/9] bg-neutral-950 border border-black/15 overflow-hidden group shadow-lg"
         >
-          {/* ACTIVE CHANNEL VIDEO */}
+          {/* Natural Video Colors (Grayscale filter removed) */}
           <video
             ref={videoRef}
             key={current.src}
@@ -162,22 +156,19 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
             loop
             muted={isMuted}
             playsInline
-            className="w-full h-full object-cover grayscale contrast-125 brightness-90 transition-transform duration-700 group-hover:scale-102"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
             src={current.src}
           />
 
-          {/* CINEMATIC MONOCHROME GRADIENT */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/40 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/35 pointer-events-none" />
 
-          {/* TOP HUD ROW */}
           <div className="absolute top-3 sm:top-6 left-3 sm:left-6 right-3 sm:right-6 flex items-center justify-between text-white font-mono text-[9px] sm:text-xs uppercase">
             <div className="bg-black/80 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 border border-white/15 flex items-center gap-2">
               <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-red-600 animate-pulse shrink-0" />
               <span className="tracking-wider">{current.tag}</span>
-              <span className="text-neutral-500 hidden sm:inline">&bull; 4K 24FPS</span>
+              <span className="text-neutral-400 hidden sm:inline">&bull; 4K 24FPS</span>
             </div>
 
-            {/* AUDIO & PLAY/PAUSE CONTROLS */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={togglePlay}
@@ -196,7 +187,6 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
             </div>
           </div>
 
-          {/* BOTTOM MANIFESTO OVERLAY */}
           <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 right-3 sm:right-6 flex flex-col md:flex-row md:items-end justify-between gap-3 text-white">
             <div className="max-w-2xl">
               <span className="text-[9px] sm:text-[10px] font-mono uppercase text-neutral-400 tracking-widest block mb-1">
@@ -207,7 +197,7 @@ export default function AtelierFilm({ isReady = true }: AtelierFilmProps) {
                   {current.title}
                 </TextRoll>
               </h3>
-              <p className="text-[11px] sm:text-xs text-neutral-300 font-normal leading-relaxed mt-1 sm:mt-1.5 max-w-xl">
+              <p className="text-[11px] sm:text-xs text-neutral-200 font-normal leading-relaxed mt-1 sm:mt-1.5 max-w-xl drop-shadow-sm">
                 {current.desc}
               </p>
             </div>

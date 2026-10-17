@@ -19,7 +19,6 @@ const LETTER_MASKS = [
   { char: 'D', from: { y: 0, x: '105%' },  exit: { y: 0, x: '105%' },  delay: 0.38 },
 ];
 
-// Cards centered: Trigger count tighter rakha hai taaki quickly pop hon
 const CARDS_DATA = [
   {
     id: 1,
@@ -110,7 +109,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       {/* 3. CENTER STAGE */}
       <div className="relative w-[340px] sm:w-[420px] h-[340px] flex items-center justify-center">
         
-        {/* CARDS (Increased Velocity & Snappy Bloom/Implosion) */}
+        {/* CARDS (Natural Color Restored) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {CARDS_DATA.map((card, idx) => {
             const isVisible = counter >= card.trigger;
@@ -151,12 +150,12 @@ export default function Preloader({ onComplete }: PreloaderProps) {
                 }}
                 className="absolute w-[185px] h-[255px] bg-white rounded-lg p-2.5 shadow-2xl flex flex-col justify-between border border-neutral-300"
               >
-                {/* Visual */}
+                {/* Visual - Real Full-Grain Colors */}
                 <div className="w-full h-[190px] bg-neutral-900 rounded overflow-hidden relative">
                   <img
                     src={card.img}
-                    alt="Leather Frame"
-                    className="w-full h-full object-cover grayscale contrast-125"
+                    alt="Atelier Leather Specimen"
+                    className="w-full h-full object-cover"
                   />
                   <div className="absolute top-2 right-2 w-3.5 h-3.5 bg-white rounded-xs shadow-xs" />
                   <div className="absolute bottom-2 left-2 text-[8px] font-mono text-white bg-black px-1.5 py-0.5 uppercase tracking-wider">
