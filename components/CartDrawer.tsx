@@ -15,7 +15,7 @@ export interface CartItem {
   size: string;
   quantity: number;
   image: string;
-  category?: string;
+  category: string;
 }
 
 export interface CartDrawerProps {
@@ -192,7 +192,7 @@ export default function CartDrawer({
               ) : (
                 activeItems.map((item) => (
                   <div key={`${item.id}-${item.size}`} className="pt-4 first:pt-0 flex gap-4">
-                    {/* THUMBNAIL - Natural Leather Color */}
+                    {/* THUMBNAIL */}
                     <div className="relative w-20 h-24 sm:w-22 sm:h-26 bg-neutral-200 border border-black/10 shrink-0 overflow-hidden">
                       <img
                         src={item.image}
@@ -207,7 +207,7 @@ export default function CartDrawer({
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <span className="text-[9px] uppercase font-mono tracking-widest text-neutral-400 block">
-                              {item.category || 'Atelier Series'}
+                              {item.category}
                             </span>
                             <h3 className="text-sm font-bold uppercase tracking-tight text-black">
                               {item.name}
