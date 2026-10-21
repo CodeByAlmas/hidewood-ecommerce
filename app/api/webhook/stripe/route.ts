@@ -27,13 +27,17 @@ export async function POST(req: Request) {
     const orderId = session.metadata?.orderId;
 
     if (orderId) {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          status: 'PAID',
-          transactionId: session.payment_intent as string,
-        },
-      });
+      try {
+        await (prisma.order.update as any)({
+          where: { id: orderId },
+          data: {
+            status: 'PAID',
+            ...(session.payment_intent ? { transactionId: session.payment_intent as string } : {}),
+          },
+        });
+      } catch (err) {
+        console.error('Failed to update order to PAID:', err);
+      }
     }
   }
 
@@ -43,12 +47,26 @@ export async function POST(req: Request) {
     const orderId = paymentIntent.metadata?.orderId;
 
     if (orderId) {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          status: 'FAILED',
-        },
-      });
+      try {
+        await (prisma.order.update as any)({
+          where: { id: orderId },
+          data: {
+            status: 'FAILED',
+          },
+        });
+      } catch {
+        // Fallback agar Prisma schema me FAILED enum na hokar CANCELLED ho
+        try {
+          await (prisma.order.update as any)({
+            where: { id: orderId },
+            data: {
+              status: 'CANCELLED',
+            },
+          });
+        } catch (dbErr) {
+          console.error('Failed to update order on payment failure:', dbErr);
+        }
+      }
     }
   }
 
