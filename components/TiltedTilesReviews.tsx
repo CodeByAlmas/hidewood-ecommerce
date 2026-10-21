@@ -22,8 +22,8 @@ const REVIEWS_COL_1: ReviewTile[] = [
     city: 'Mumbai',
     piece: 'The Bridle Edition // 38mm',
     rating: 5,
-    quote: 'Day 40 into daily wear. The single-piece steerhide molded to my waist without warping. Solid sand-cast buckle feels industrial.',
-    timeframe: 'Verified Atelier Patron',
+    quote: 'Wearing it daily for over a month now. Pure thick leather with zero cardboard inside. Heavy solid brass buckle feels indestructible.',
+    timeframe: 'Verified Buyer',
     image: '/belt-macro.png',
   },
   {
@@ -32,8 +32,8 @@ const REVIEWS_COL_1: ReviewTile[] = [
     city: 'New Delhi',
     piece: 'Bespoke Folio Wallet',
     rating: 5,
-    quote: 'Edges are glass-burnished beeswax. No raw fiber peeling in my back pocket even after three flights this week.',
-    timeframe: 'Patina Log #104',
+    quote: 'Super slim and fits flat in my back pocket without bulging. Edges are clean and smooth, leather feels very premium.',
+    timeframe: 'Verified Buyer',
     image: '/AtelierFresh.png',
   },
   {
@@ -42,8 +42,8 @@ const REVIEWS_COL_1: ReviewTile[] = [
     city: 'Bengaluru',
     piece: 'Heritage Raw Saddle',
     rating: 5,
-    quote: 'Untreated natural hide that oxidizes beautifully under morning sun. Tea-core character is already showing through.',
-    timeframe: 'Verified Atelier Patron',
+    quote: 'Natural untreated leather that naturally gets darker with daily wear and sunlight. Has a gorgeous warm caramel look now.',
+    timeframe: 'Verified Buyer',
     image: '/BodyAcclimation.png',
   },
 ];
@@ -52,11 +52,11 @@ const REVIEWS_COL_2: ReviewTile[] = [
   {
     id: 'rev-04',
     name: 'Rohan Nambiar',
-    city: 'London / Kanpur',
+    city: 'Kanpur / London',
     piece: 'The Onyx Dress // 32mm',
     rating: 5,
-    quote: 'Graphite beveled edge tailored for charcoal suiting. Sand-cast brass has a distinct heft unmatched by luxury fashion houses.',
-    timeframe: 'Verified Bespoke Order',
+    quote: 'Perfect width for office suits and formal trousers. The matte buckle looks sharp and elegant, definitely luxury grade.',
+    timeframe: 'Verified Buyer',
     image: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=800&auto=format&fit=crop',
   },
   {
@@ -65,8 +65,8 @@ const REVIEWS_COL_2: ReviewTile[] = [
     city: 'Hyderabad',
     piece: 'Tea-Core Steer Moto',
     rating: 5,
-    quote: 'Heavy 1.4mm hide. Stiff right out of dispatch, but broke in within two weeks of evening riding. Pure heirloom tier.',
-    timeframe: 'Drop 01 Archive',
+    quote: 'Thick real leather jacket. Felt heavy at first, but became super comfortable and molded to my body within two weeks.',
+    timeframe: 'Verified Buyer',
     image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=800&auto=format&fit=crop',
   },
   {
@@ -75,8 +75,8 @@ const REVIEWS_COL_2: ReviewTile[] = [
     city: 'Pune',
     piece: 'Monolithic Field Duffle',
     rating: 5,
-    quote: 'Peened copper rivets and continuous harness straps. Takes rough baggage handling without a single popped stitch.',
-    timeframe: 'Vault Dispatch',
+    quote: 'Heavy-duty copper rivets and thick leather straps. Survived 4 flights and rough luggage handling without a single scratch or tear.',
+    timeframe: 'Verified Buyer',
     image: '/HeirloomValut.png',
   },
 ];
@@ -88,8 +88,8 @@ const REVIEWS_COL_3: ReviewTile[] = [
     city: 'Kolkata',
     piece: 'The Bridle Edition // Brass',
     rating: 5,
-    quote: '4.2mm thickness is absolute truth. No cardboard stuffing in between, just one raw slab of full-grain leather.',
-    timeframe: 'Verified Patron',
+    quote: 'The 4.2mm thickness is real. It is one solid piece of full-grain leather, not layered paper or synthetic leather. Built to last.',
+    timeframe: 'Verified Buyer',
     image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=800&auto=format&fit=crop',
   },
   {
@@ -98,8 +98,8 @@ const REVIEWS_COL_3: ReviewTile[] = [
     city: 'Chandigarh',
     piece: 'Goodyear Welt Derby',
     rating: 5,
-    quote: 'Double oak-bark tanned soles with channeled welt. Resoled once, leather upper looks richer than the day I received it.',
-    timeframe: 'Heirloom Verified',
+    quote: 'Real leather soles with solid stitch construction. Extremely comfortable for formal meetings and easy to maintain.',
+    timeframe: 'Verified Buyer',
     image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop',
   },
   {
@@ -108,8 +108,8 @@ const REVIEWS_COL_3: ReviewTile[] = [
     city: 'Ahmedabad',
     piece: 'MagSafe Leather Case',
     rating: 5,
-    quote: 'Palm friction created a rich dark patina across the corners in 60 days. Built like a saddlery piece for a phone.',
-    timeframe: 'Daily Carry Log',
+    quote: 'The leather gets a glossy dark shine with daily palm friction. Built solid like a leather belt for a smartphone.',
+    timeframe: 'Verified Buyer',
     image: 'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=800&auto=format&fit=crop',
   },
 ];
@@ -166,7 +166,7 @@ function InteractiveTile({ item }: { item: ReviewTile }) {
       transition={{ duration: 0.15 }}
       className="relative w-full bg-neutral-900 border border-white/15 overflow-hidden cursor-pointer select-none group shadow-2xl"
     >
-      {/* Background Piece Photo - Natural Leather Color (Grayscale Removed) */}
+      {/* Background Piece Photo */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-950">
         <img
           src={item.image}
@@ -204,7 +204,7 @@ function InteractiveTile({ item }: { item: ReviewTile }) {
             <div className="text-neutral-500">{item.city} &bull; {item.timeframe}</div>
           </div>
           <span className="text-white/40 uppercase font-mono text-[8px]">
-            PROVENANCE
+            REAL BUYER
           </span>
         </div>
       </div>
@@ -219,20 +219,20 @@ export default function TiltedTilesReviews() {
     <section
       ref={containerRef}
       id="patrons"
-      aria-label="Atelier Patron Field Reviews & Provenance"
+      aria-label="Customer Reviews and Ratings"
       className="relative w-screen left-1/2 -translate-x-1/2 pt-10 sm:pt-16 pb-24 sm:pb-36 bg-[#0E0E0E] text-white overflow-hidden select-none"
     >
       <div className="w-full px-3 sm:px-6 md:px-8 mb-8 sm:mb-12">
-        {/* SUB-BAR HEADER */}
+        {/* SUB-BAR HEADER (Simple English) */}
         <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-2 pb-3 border-b border-white/10 font-sans">
           <div className="flex items-center gap-2 sm:gap-2.5">
             <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse shrink-0" />
             <h2 className="text-[11px] sm:text-xs uppercase tracking-widest font-semibold text-white">
-              Patron Logs &bull; Provenance in the Field
+              Customer Reviews &bull; Real Leather In The Field
             </h2>
           </div>
           <p className="text-[10px] sm:text-xs text-neutral-400 font-medium font-mono">
-            Unfiltered Wear Records &bull; Pan-India Dispatch
+            Verified Purchase Ratings &bull; Delivery Across India
           </p>
         </div>
       </div>
@@ -292,15 +292,15 @@ export default function TiltedTilesReviews() {
 
         </div>
 
-        {/* Top & Bottom Cinematic Edge Gradients */}
+        {/* Top & Bottom Edge Gradients */}
         <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-[#0E0E0E] to-transparent pointer-events-none z-10" />
         <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-[#0E0E0E] to-transparent pointer-events-none z-10" />
       </div>
 
-      {/* FOOTER METRICS */}
+      {/* FOOTER METRICS (Commercial & Clear) */}
       <div className="w-full px-3 sm:px-6 md:px-8 mt-8 sm:mt-12 flex flex-col sm:flex-row items-baseline justify-between gap-3 text-[10px] sm:text-xs font-mono text-neutral-400">
-        <div>4.98 / 5.0 ATELIER SATISFACTION INDEX &bull; 1,420+ DISPATCHES</div>
-        <div className="text-white uppercase font-bold tracking-wider">LIFETIME STRUCTURAL INTEGRITY WARRANTY</div>
+        <div>4.98 / 5.0 OVERALL CUSTOMER RATING &bull; 1,420+ ORDERS DELIVERED</div>
+        <div className="text-white uppercase font-bold tracking-wider">LIFETIME LEATHER WARRANTY INCLUDED</div>
       </div>
     </section>
   );

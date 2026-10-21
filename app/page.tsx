@@ -7,10 +7,12 @@ import Preloader from '@/components/Preloader';
 import HeroTitle from '@/components/HeroTitle';
 import CategoryRunway from '@/components/CategoryRunway';
 import ProductGrid from '@/components/ProductGrid';
+import PopularCollections from '@/components/PopularCollections';
+import LifestyleBanners from '@/components/LifestyleBanners';
 import AtelierFilm from '@/components/AtelierFilm';
-import CraftAnatomy from '@/components/CraftAnatomy';
 import TiltedTilesReviews from '@/components/TiltedTilesReviews';
 import DropReservationBanner from '@/components/DropReservationBanner';
+import ComboSection from '@/components/ComboSection';
 
 interface Product {
   id: string;
@@ -29,10 +31,10 @@ const PRODUCTS: Product[] = [
     id: 'the-bridle-edition',
     name: 'The Bridle Edition',
     price: 5499,
-    badge: 'Limited Run',
+    badge: 'Best Seller',
     category: 'Full-Grain 38mm',
-    description: 'Cut from single-origin English bridle leather. Hot-stuffed with natural waxes and hand-burnished for lifetime wear.',
-    spec: '4.2mm Unsplit Hide • Solid Sand-Cast Brass',
+    description: 'Cut from 100% thick real leather. Treated with natural wax for a lifetime of daily wear without cracking.',
+    spec: '4.2mm Real Hide • Solid Brass Buckle',
     inStock: true,
     images: [
       '/belt-macro.png',
@@ -43,10 +45,10 @@ const PRODUCTS: Product[] = [
     id: 'the-onyx-dress',
     name: 'The Onyx Dress',
     price: 6299,
-    badge: 'Archive 2026',
+    badge: 'Formal Classic',
     category: 'Dress 32mm',
-    description: 'Ultra-refined profile tailored for bespoke suits. Hand-beveled edge painted in deep matte graphite.',
-    spec: 'Tuscan Calfskin • Brushed Steel Hardware',
+    description: 'Sleek formal belt with smooth hand-painted black edges tailored for dress trousers and bespoke suits.',
+    spec: 'Italian Calfskin • Matte Steel Buckle',
     inStock: true,
     images: [
       'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop',
@@ -57,10 +59,10 @@ const PRODUCTS: Product[] = [
     id: 'heritage-raw-saddle',
     name: 'Heritage Raw Saddle',
     price: 6999,
-    badge: 'Sold out',
-    category: 'Heavy Harness 40mm',
-    description: 'Natural untreated vegetable-tanned leather that develops a deep caramel patina unique to your movement.',
-    spec: 'Heavy Bovine Butt • Hand Saddle-Stitched',
+    badge: 'Sold Out',
+    category: 'Heavy Jeans 40mm',
+    description: 'Natural uncolored leather belt that gets richer and darker as you wear it every single day.',
+    spec: 'Extra Heavy Leather • Hand-Stitched',
     inStock: false,
     images: [
       'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1000&auto=format&fit=crop',
@@ -71,10 +73,10 @@ const PRODUCTS: Product[] = [
     id: 'bespoke-folio-wallet',
     name: 'Bespoke Folio Wallet',
     price: 4499,
-    badge: 'Upcoming Drop',
-    category: 'Leather Goods',
-    description: 'Seamless six-pocket bifold crafted from buttero leather. Flush edges with hand-pressed creasing lines.',
-    spec: 'Phase 02 Expansion Item',
+    badge: 'New Arrival',
+    category: 'Wallets & Carry',
+    description: 'Slim bifold leather wallet holding 8 cards and flat cash without bulging in your pocket.',
+    spec: 'Smooth Grain Leather • Hand-Finished',
     inStock: false,
     images: [
       'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1000&auto=format&fit=crop'
@@ -82,15 +84,10 @@ const PRODUCTS: Product[] = [
   }
 ];
 
-// Memory Guard: F5/Browser Refresh par reset hota hai (false banta hai).
-// Routing (Return to index / Logo click) par true rehta hai.
 let hasPreloadedInCurrentSession = false;
 
 export default function HomePage() {
   const router = useRouter();
-
-  // Agar refresh hua hai to false rahega (preloader chalega).
-  // Agar doosre page se wapas aaye ho to true rahega (preloader nahi aayega, direct HeroTitle dikhega).
   const [preloaderDone, setPreloaderDone] = useState(hasPreloadedInCurrentSession);
 
   const handlePreloaderComplete = () => {
@@ -104,50 +101,16 @@ export default function HomePage() {
       {
         '@type': 'Store',
         '@id': 'https://hidewood.example.com/#store',
-        name: 'HIDEWOOD Atelier',
+        name: 'HIDEWOOD Leather',
         url: 'https://hidewood.example.com',
         description:
-          'Archival luxury leather house specializing in 4.2mm unsplit Tuscan steerhide belts, solid sand-cast brass hardware, and bespoke leather goods forged in Kanpur.',
+          '100% full-grain leather belts, solid brass buckles, wallets, and handcrafted accessories made in Kanpur.',
         priceRange: '₹₹₹',
         address: {
           '@type': 'PostalAddress',
           addressLocality: 'Kanpur',
           addressRegion: 'Uttar Pradesh',
           addressCountry: 'IN',
-        },
-        hasOfferCatalog: {
-          '@type': 'OfferCatalog',
-          name: 'Series 01 Atelier Catalogue',
-          itemListElement: PRODUCTS.map((prod, index) => ({
-            '@type': 'Offer',
-            itemOffered: {
-              '@type': 'Product',
-              name: prod.name,
-              category: prod.category,
-              description: prod.description,
-              image: prod.images[0],
-              offers: {
-                '@type': 'Offer',
-                price: prod.price,
-                priceCurrency: 'INR',
-                availability: prod.inStock
-                  ? 'https://schema.org/InStock'
-                  : 'https://schema.org/OutOfStock',
-              },
-            },
-            position: index + 1,
-          })),
-        },
-      },
-      {
-        '@type': 'WebSite',
-        '@id': 'https://hidewood.example.com/#website',
-        url: 'https://hidewood.example.com',
-        name: 'HIDEWOOD Atelier',
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: 'https://hidewood.example.com/products?q={search_term_string}',
-          'query-input': 'required name=search_term_string',
         },
       },
     ],
@@ -162,21 +125,18 @@ export default function HomePage() {
 
       <div className="w-full bg-[#F8F8F6] text-[#111111] antialiased selection:bg-black selection:text-white overflow-x-hidden">
         
-        {/* PRELOADER: Sirf hard refresh par aayega, navigation par kabhi nahi */}
         <AnimatePresence mode="wait">
           {!preloaderDone && (
             <Preloader onComplete={handlePreloaderComplete} />
           )}
         </AnimatePresence>
 
-        {/* HERO & CONTENT: Refresh par preloader khatam hone par live reveal hoga, 
-            aur in-app navigation (Return to Index / Logo) par bina kisi delay ke instant clean settle rahega */}
         <main id="hero" className="px-3 sm:px-8 lg:px-12 pt-20 sm:pt-28 pb-0 max-w-[1800px] mx-auto w-full overflow-x-hidden">
           {preloaderDone && <HeroTitle />}
 
           <CategoryRunway
             isReady={preloaderDone}
-            onSelectSubCategory={(subId) => {
+            onSelectSubCategory={(_subId) => {
               const target = document.getElementById('archive');
               if (target) target.scrollIntoView({ behavior: 'smooth' });
             }}
@@ -190,9 +150,16 @@ export default function HomePage() {
             isReady={preloaderDone}
           />
 
-          <AtelierFilm isReady={preloaderDone} />
+          {/* 1. Popular Collections (Shop by Style - 4 Desktop / 2 Mobile) */}
+          <PopularCollections />
 
-          <CraftAnatomy />
+          {/* 2. Handcrafted Leather Combos & Gift Sets (Directly after Featured Categories / Popular Collections) */}
+          <ComboSection />
+
+          {/* 3. Lifestyle Banners */}
+          <LifestyleBanners />
+
+          <AtelierFilm isReady={preloaderDone} />
 
           <TiltedTilesReviews />
 

@@ -136,7 +136,7 @@ export default function CartDrawer({
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
                 <h2 className="text-xs uppercase tracking-widest font-black font-sans text-black">
-                  Atelier Dispatch Bag ({totalCount})
+                  Your Shopping Bag ({totalCount})
                 </h2>
               </div>
 
@@ -150,18 +150,18 @@ export default function CartDrawer({
               </button>
             </div>
 
-            {/* 2. FREE EXPEDITED COURIER PROGRESS BAR */}
+            {/* 2. FREE DELIVERY PROGRESS BAR */}
             <div className="px-5 sm:px-6 py-3.5 bg-neutral-100 border-b border-black/10 font-mono">
               <div className="flex items-center justify-between text-[11px] font-medium text-neutral-600 mb-2">
                 <span className="flex items-center gap-1.5">
                   <Truck className="w-3.5 h-3.5 text-black" />
                   {subtotal >= freeShippingThreshold ? (
                     <span className="font-bold text-black uppercase">
-                      Complimentary Air Express Unlocked
+                      Free Express Delivery Unlocked!
                     </span>
                   ) : (
                     <span>
-                      Add <strong className="text-black font-bold">₹{(freeShippingThreshold - subtotal).toLocaleString('en-IN')}</strong> for Free Air Shipping
+                      Add <strong className="text-black font-bold">₹{(freeShippingThreshold - subtotal).toLocaleString('en-IN')}</strong> more for Free Delivery
                     </span>
                   )}
                 </span>
@@ -185,8 +185,8 @@ export default function CartDrawer({
                   <p className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-1">
                     Your bag is empty
                   </p>
-                  <p className="text-[11px] text-neutral-400 max-w-[220px]">
-                    No handcrafted pieces commissioned yet.
+                  <p className="text-[11px] text-neutral-400 max-w-[220px] font-sans">
+                    You haven&apos;t added any leather products yet.
                   </p>
                 </div>
               ) : (
@@ -220,7 +220,7 @@ export default function CartDrawer({
 
                         {item.size && (
                           <div className="mt-1 inline-block border border-black/15 bg-white px-2 py-0.5 text-[10px] font-mono text-neutral-600">
-                            Fit: <span className="font-bold text-black">{item.size}</span>
+                            Size: <span className="font-bold text-black">{item.size}&quot;</span>
                           </div>
                         )}
                       </div>
@@ -252,7 +252,7 @@ export default function CartDrawer({
                         <button
                           type="button"
                           onClick={() => handleRemove(item.id, item.size)}
-                          className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 hover:text-black transition-colors cursor-pointer underline"
+                          className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 hover:text-red-600 transition-colors cursor-pointer underline"
                         >
                           Remove
                         </button>
@@ -268,17 +268,17 @@ export default function CartDrawer({
               <div className="p-5 sm:p-6 border-t border-black/10 bg-white space-y-4">
                 <div className="space-y-1.5 text-xs font-mono">
                   <div className="flex justify-between text-neutral-500">
-                    <span>Atelier Subtotal</span>
+                    <span>Subtotal</span>
                     <span className="font-bold text-black">₹{subtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-neutral-500">
-                    <span>Express Dispatch</span>
+                    <span>Delivery</span>
                     <span className="font-semibold text-black">
-                      {subtotal >= freeShippingThreshold ? 'Complimentary' : '₹450'}
+                      {subtotal >= freeShippingThreshold ? 'FREE' : '₹450'}
                     </span>
                   </div>
                   <div className="pt-2 border-t border-black/10 flex justify-between text-sm font-sans font-black text-black">
-                    <span className="uppercase tracking-tight">Total Valuation</span>
+                    <span className="uppercase tracking-tight">Total</span>
                     <span className="font-mono text-red-600">
                       ₹{(subtotal >= freeShippingThreshold ? subtotal : subtotal + 450).toLocaleString('en-IN')}
                     </span>
@@ -287,7 +287,7 @@ export default function CartDrawer({
 
                 <div className="flex items-center gap-2 p-2.5 bg-neutral-50 border border-black/10 text-[10px] text-neutral-600 font-mono">
                   <ShieldCheck className="w-4 h-4 text-black shrink-0" />
-                  <span>Backed by HIDEWOOD 100-Year Heritage Guarantee</span>
+                  <span>100% Genuine Leather &bull; Lifetime Guarantee</span>
                 </div>
 
                 <button
@@ -296,7 +296,7 @@ export default function CartDrawer({
                   className="group w-full bg-black text-white py-4 px-6 text-xs uppercase font-bold tracking-widest hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >
                   <TextRoll className="text-white font-bold">
-                    Proceed to Bespoke Checkout
+                    Proceed to Checkout
                   </TextRoll>
                   <ArrowUpRight className="w-4 h-4 transition-transform duration-300 ease-[0.16,1,0.3,1] group-hover:rotate-45 group-hover:translate-x-0.5" />
                 </button>

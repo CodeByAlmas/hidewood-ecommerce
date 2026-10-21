@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,13 +14,12 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  Compass,
 } from 'lucide-react';
 
 export default function PatronAuthPage() {
   const router = useRouter();
 
-  const [authMode, setAuthMode] = useState<'magic-link' | 'master-key'>('magic-link');
+  const [authMode, setAuthMode] = useState<'magic-link' | 'password'>('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +27,16 @@ export default function PatronAuthPage() {
   const [socialProviderLoading, setSocialProviderLoading] = useState<'google' | 'apple' | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
-  // Input Sanitizer against XSS & Payload Injections
+  // If already logged in, redirect directly to orders
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const activeSession = localStorage.getItem('hidewood_session_email');
+      if (activeSession) {
+        router.push('/orders');
+      }
+    }
+  }, [router]);
+
   const sanitize = (val: string) => val.replace(/[<>'"/]/g, '').trim();
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
@@ -37,12 +45,12 @@ export default function PatronAuthPage() {
 
     const cleanEmail = sanitize(email);
     if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
-      setStatusMessage({ type: 'error', text: 'Please provide a valid patron communication email.' });
+      setStatusMessage({ type: 'error', text: 'Please enter a valid email address.' });
       return;
     }
 
-    if (authMode === 'master-key' && password.length < 8) {
-      setStatusMessage({ type: 'error', text: 'Master Cipher must be at least 8 characters in entropy.' });
+    if (authMode === 'password' && password.length < 6) {
+      setStatusMessage({ type: 'error', text: 'Password must be at least 6 characters.' });
       return;
     }
 
@@ -50,47 +58,55 @@ export default function PatronAuthPage() {
 
     setTimeout(() => {
       setIsSubmitting(false);
+      // Persist session so /orders knows who is logged in
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hidewood_session_email', cleanEmail);
+      }
+
       if (authMode === 'magic-link') {
         setStatusMessage({
           type: 'success',
-          text: `Encrypted dispatch link transmitted to ${cleanEmail}. Inspect your terminal.`,
+          text: `Login link sent to ${cleanEmail}. Redirecting to your orders...`,
         });
       } else {
         setStatusMessage({
           type: 'success',
-          text: 'Patron credentials verified. Initializing secure session ledger...',
+          text: 'Login successful! Opening your orders dashboard...',
         });
-        setTimeout(() => {
-          router.push('/orders');
-        }, 1200);
       }
-    }, 1200);
+
+      setTimeout(() => {
+        router.push('/orders');
+      }, 900);
+    }, 1000);
   };
 
-  // Secure OAuth Handshake Trigger
   const handleOAuthSignIn = (provider: 'google' | 'apple') => {
     setStatusMessage(null);
     setSocialProviderLoading(provider);
 
-    // Secure CSRF state token simulation
+    const fallbackEmail = provider === 'google' ? 'customer@gmail.com' : 'customer@icloud.com';
+
     setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hidewood_session_email', fallbackEmail);
+      }
       setSocialProviderLoading(null);
       setStatusMessage({
         type: 'success',
-        text: `Secure handshake established with ${provider === 'google' ? 'Google ID' : 'Apple Private Relay'}. Routing to vault...`,
+        text: `Connected with ${provider === 'google' ? 'Google' : 'Apple'}. Redirecting...`,
       });
       setTimeout(() => {
         router.push('/orders');
-      }, 1000);
-    }, 1100);
+      }, 700);
+    }, 1000);
   };
 
-  // Structured Data Schema (Search bot protection & Auth Spec)
   const authSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Patron Authentication Chamber | HIDEWOOD Atelier',
-    description: 'Encrypted client authentication for commissioned leather goods and dispatch telemetry.',
+    name: 'Customer Sign In | HIDEWOOD Leather',
+    description: 'Sign in to access your orders, track shipments, and manage your HIDEWOOD account.',
     url: 'https://hidewood.example.com/login',
   };
 
@@ -111,29 +127,28 @@ export default function PatronAuthPage() {
               className="inline-flex items-center gap-1.5 text-neutral-600 hover:text-black transition-colors font-semibold"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Index</span>
+              <span>Back to Home</span>
             </Link>
 
-            <span className="text-neutral-400">SESSION AUTH // 2026</span>
+            <span className="text-neutral-400">CUSTOMER LOGIN</span>
           </div>
 
           {/* Header Title */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-2 font-mono text-[10px] uppercase text-neutral-500 font-bold">
               <Lock className="w-3.5 h-3.5 text-black" />
-              <span>Patron Security Chamber</span>
+              <span>Secure Customer Account</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-black font-sans leading-none">
-              SIGN IN.
+              SIGN IN
             </h1>
             <p className="font-mono text-xs text-neutral-500 mt-2">
-              Access your commissions, custom size history, and 3D patron keycard.
+              Log in to see your previous orders, live tracking, and account details.
             </p>
           </div>
 
-          {/* 1. SECURE SINGLE SIGN-ON (GOOGLE & APPLE OAUTH) */}
+          {/* 1. GOOGLE & APPLE LOGIN BUTTONS */}
           <div className="space-y-2.5 mb-6">
-            {/* Google OAuth Button */}
             <button
               type="button"
               disabled={socialProviderLoading !== null || isSubmitting}
@@ -159,11 +174,10 @@ export default function PatronAuthPage() {
                 />
               </svg>
               <span>
-                {socialProviderLoading === 'google' ? 'Authenticating Google Token...' : 'Authorize with Google ID'}
+                {socialProviderLoading === 'google' ? 'Connecting Google...' : 'Continue with Google'}
               </span>
             </button>
 
-            {/* Apple OAuth Button */}
             <button
               type="button"
               disabled={socialProviderLoading !== null || isSubmitting}
@@ -174,7 +188,7 @@ export default function PatronAuthPage() {
                 <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.65 1.36-.58.67-1.09 1.74-.95 2.78 1 .08 2.05-.53 2.68-1.29z" />
               </svg>
               <span>
-                {socialProviderLoading === 'apple' ? 'Verifying Apple Relay...' : 'Sign in with Apple'}
+                {socialProviderLoading === 'apple' ? 'Connecting Apple...' : 'Sign in with Apple'}
               </span>
             </button>
           </div>
@@ -183,12 +197,24 @@ export default function PatronAuthPage() {
           <div className="relative flex items-center justify-center mb-6">
             <div className="w-full border-t border-black/10" />
             <span className="bg-white px-3 text-[10px] font-mono uppercase text-neutral-400 absolute">
-              Or Use Atelier Cipher
+              Or Use Email Address
             </span>
           </div>
 
           {/* Mode Switcher Tabs */}
           <div className="grid grid-cols-2 border border-black/20 p-1 bg-[#F8F8F6] mb-6 font-mono text-[11px] uppercase">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('password');
+                setStatusMessage(null);
+              }}
+              className={`py-2 text-center font-bold transition-colors cursor-pointer ${
+                authMode === 'password' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
+              }`}
+            >
+              Password
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -199,19 +225,7 @@ export default function PatronAuthPage() {
                 authMode === 'magic-link' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
               }`}
             >
-              One-Time Link
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('master-key');
-                setStatusMessage(null);
-              }}
-              className={`py-2 text-center font-bold transition-colors cursor-pointer ${
-                authMode === 'master-key' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
-              }`}
-            >
-              Master Key
+              Email Link
             </button>
           </div>
 
@@ -219,7 +233,7 @@ export default function PatronAuthPage() {
           <form onSubmit={handleAuthSubmit} className="space-y-4 font-mono text-xs">
             <div>
               <label className="block text-[11px] uppercase text-black font-bold mb-1.5">
-                Patron Communication Email *
+                Your Email Address *
               </label>
               <div className="relative">
                 <input
@@ -227,25 +241,25 @@ export default function PatronAuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="patron@domain.com"
+                  placeholder="rahul@gmail.com"
                   className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black p-3 text-xs focus:outline-none transition-colors"
                 />
                 <Mail className="w-4 h-4 text-neutral-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            {authMode === 'master-key' && (
+            {authMode === 'password' && (
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-[11px] uppercase text-black font-bold">
-                    Master Cipher Passcode *
+                    Password *
                   </label>
                   <button
                     type="button"
                     onClick={() => setAuthMode('magic-link')}
                     className="text-[10px] text-neutral-500 hover:text-black underline cursor-pointer"
                   >
-                    Forgot passcode?
+                    Forgot password?
                   </button>
                 </div>
                 <div className="relative">
@@ -300,10 +314,10 @@ export default function PatronAuthPage() {
               <KeyRound className="w-3.5 h-3.5" />
               <span>
                 {isSubmitting
-                  ? 'Verifying Telemetry...'
+                  ? 'Signing In...'
                   : authMode === 'magic-link'
-                  ? 'Transmit Encrypted Sign-In Link'
-                  : 'Authorize Access'}
+                  ? 'Send Login Link'
+                  : 'Sign In to Account'}
               </span>
             </button>
           </form>
@@ -311,10 +325,10 @@ export default function PatronAuthPage() {
           {/* Security Assurance Footer */}
           <div className="mt-8 pt-5 border-t border-black/10 font-mono text-[10px] text-neutral-400 uppercase flex items-center justify-between">
             <span className="flex items-center gap-1 text-black font-semibold">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" />
-              TLS 1.3 / AES-256
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              256-Bit Secure Encryption
             </span>
-            <span>KANPUR ATELIER LEDGER</span>
+            <span>HIDEWOOD KANPUR</span>
           </div>
 
         </div>

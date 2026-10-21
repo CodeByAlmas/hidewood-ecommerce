@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
-  ArrowUpRight,
   Clock,
   MapPin,
   Mail,
@@ -23,7 +22,6 @@ interface InquiryState {
   phone: string;
   topic: string;
   waistSize: string;
-  monogramInitials: string;
   message: string;
 }
 
@@ -31,9 +29,8 @@ const INITIAL_INQUIRY: InquiryState = {
   fullName: '',
   email: '',
   phone: '',
-  topic: 'Bespoke Sizing & Monogramming',
+  topic: 'Belt Sizing Help',
   waistSize: '34',
-  monogramInitials: '',
   message: '',
 };
 
@@ -44,7 +41,7 @@ export default function ContactConciergePage() {
   const [kanpurTime, setKanpurTime] = useState<string>('');
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
-  // Live Kanpur Bench Clock (IST)
+  // Live Kanpur Workshop Clock (IST)
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -63,7 +60,7 @@ export default function ContactConciergePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // XSS & Payload Sanitizer
+  // XSS & Input Sanitizer
   const sanitizeText = (input: string): string => {
     return input.replace(/[<>]/g, '').trim();
   };
@@ -74,53 +71,86 @@ export default function ContactConciergePage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'monogramInitials' ? value.slice(0, 3).toUpperCase() : value,
+      [name]: value,
     }));
   };
 
+  // 100% Reliable Mail Dispatch: Opens Gmail Web Composer directly + fallback to mailto
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate safe API dispatch
+    const safeName = sanitizeText(formData.fullName) || 'Customer';
+    const safeEmail = sanitizeText(formData.email);
+    const safePhone = sanitizeText(formData.phone) || 'Not provided';
+    const safeSize = sanitizeText(formData.waistSize);
+    const safeMsg = sanitizeText(formData.message) || 'Inquiry regarding HIDEWOOD products.';
+
+    const mailSubject = `Product Inquiry: ${formData.topic} - ${safeName}`;
+    const mailBody =
+      `Customer Name: ${safeName}\n` +
+      `Email Address: ${safeEmail}\n` +
+      `Phone Number: ${safePhone}\n` +
+      `Inquiry Topic: ${formData.topic}\n` +
+      `Waist / Shoe Size: ${safeSize}"\n\n` +
+      `Message:\n${safeMsg}`;
+
+    // Direct Web Gmail Composer URL (works across all browsers without mail client app)
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=dispatch@hidewood.com&su=${encodeURIComponent(
+      mailSubject
+    )}&body=${encodeURIComponent(mailBody)}`;
+
+    // Standard mailto fallback for Outlook/Apple Mail users
+    const mailtoUrl = `mailto:dispatch@hidewood.com?subject=${encodeURIComponent(
+      mailSubject
+    )}&body=${encodeURIComponent(mailBody)}`;
+
+    // Try opening Gmail Web first in new tab; if popup blocked, trigger standard mailto
+    const newWindow = window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      window.location.href = mailtoUrl;
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);
-    }, 1200);
+    }, 700);
   };
 
-  // Direct Wa.me link generator for instant VIP dispatch
+  // Direct WhatsApp Message Link
   const generateWhatsAppLink = () => {
-    const safeName = sanitizeText(formData.fullName) || 'Client';
-    const text = `Hello HIDEWOOD Atelier Concierge,%0A%0AClient: ${encodeURIComponent(
-      safeName
-    )}%0ATopic: ${encodeURIComponent(formData.topic)}%0AWaist Size: ${encodeURIComponent(
-      formData.waistSize
-    )}"%0AMonogram Initials: ${encodeURIComponent(
-      formData.monogramInitials || 'None'
-    )}%0A%0AMessage: ${encodeURIComponent(
-      sanitizeText(formData.message) || 'Requesting atelier sizing assistance.'
-    )}`;
+    const safeName = sanitizeText(formData.fullName) || 'Customer';
+    const safePhone = sanitizeText(formData.phone) || 'Not provided';
+    const safeMsg = sanitizeText(formData.message) || 'I need help choosing the right size and leather product.';
+
+    const text =
+      `Hello HIDEWOOD Team,%0A%0A` +
+      `*Name:* ${encodeURIComponent(safeName)}%0A` +
+      `*Phone:* ${encodeURIComponent(safePhone)}%0A` +
+      `*Topic:* ${encodeURIComponent(formData.topic)}%0A` +
+      `*Waist Size:* ${encodeURIComponent(formData.waistSize)}"%0A` +
+      `*Question:* ${encodeURIComponent(safeMsg)}`;
+
     return `https://wa.me/919999999999?text=${text}`;
   };
 
-  // Structured Data Schema (GEO / AEO / LocalBusiness & ContactPage)
+  // Structured Data Schema (LocalBusiness & ContactPage)
   const contactSchema = {
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
-    name: 'HIDEWOOD Atelier Concierge & Bespoke Dispatch Desk',
+    name: 'HIDEWOOD Customer Support & Workshop Desk',
     description:
-      'Direct communication desk for bespoke leather sizing, custom brass monogramming, and international parcel logistics from our Kanpur bench.',
+      'Direct customer support for sizing guidance, order tracking, and custom inquiries from our Kanpur leather workshop.',
     url: 'https://hidewood.example.com/contact',
     mainEntity: {
       '@type': 'Store',
-      name: 'HIDEWOOD Leather Atelier',
+      name: 'HIDEWOOD Leather',
       image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200',
       telephone: '+91-99999-99999',
       email: 'dispatch@hidewood.com',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: 'Industrial Tannery Belt, Jajmau',
+        streetAddress: 'Industrial Leather Cluster, Jajmau',
         addressLocality: 'Kanpur',
         addressRegion: 'Uttar Pradesh',
         postalCode: '208010',
@@ -145,26 +175,25 @@ export default function ContactConciergePage() {
 
   const FAQS = [
     {
-      q: 'How does the +2" Denim Waist Rule work?',
-      a: 'Belts are measured from the internal fold where the buckle rests to the middle hole (the 3rd of 5 holes). If your actual denim/trouser waist measures 32 inches, your proper HIDEWOOD heirloom size is 34 inches.',
+      q: 'How does the +2" Belt Sizing Rule work?',
+      a: 'Belts are measured from the buckle fold to the center hole. If your regular jeans or trouser waist is 32 inches, your ideal belt size is 34 inches.',
     },
     {
-      q: 'Are hot-stamped blind deboss initials permanent?',
-      a: 'Yes. Initials are pressed directly into the 4.2mm full-grain steerhide using 160°C heated brass typeface blocks with 2 tonnes of hydraulic pressure. They cannot rub off or peel away.',
+      q: 'Where is your leather produced and sourced?',
+      a: 'All our leather is sourced directly from our own sister tannery facility right here in Kanpur, India. No third-party synthetic blending or middlemen.',
     },
     {
-      q: 'What is the dispatch turnaround for custom monogram pieces?',
-      a: 'Bespoke debossed items are stamped within 24 hours at our Kanpur bench and handed directly to BlueDart Air / DHL Express in cedarwood shaving boxes.',
+      q: 'How fast is dispatch and delivery across India?',
+      a: 'Orders are dispatched within 24 to 48 hours from our workshop. Delivery takes 2 to 4 business days via express courier with real-time tracking.',
     },
     {
-      q: 'Do you ship internationally?',
-      a: 'Yes. We ship worldwide with DDP (Delivered Duty Paid) express options so international patrons encounter zero surprise customs delays.',
+      q: 'What if the belt or shoe size doesn’t fit me?',
+      a: 'We offer an easy 14-day unworn size exchange policy. Simply message our WhatsApp desk or email us and we will arrange the exchange.',
     },
   ];
 
   return (
     <>
-      {/* 1. SEO / GEO SCHEMA INJECTION */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
@@ -172,7 +201,7 @@ export default function ContactConciergePage() {
 
       <main className="min-h-screen bg-[#F8F8F6] text-[#111111] antialiased select-none pt-24 sm:pt-32 pb-20 sm:pb-32 overflow-x-hidden">
         
-        {/* 2. TOP HUD BREADCRUMB */}
+        {/* TOP BREADCRUMB */}
         <section className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 mb-8 sm:mb-12">
           <nav
             aria-label="Breadcrumb Navigation"
@@ -181,68 +210,68 @@ export default function ContactConciergePage() {
             <Link
               href="/"
               className="group inline-flex items-center gap-1.5 py-1 px-1 -ml-1 text-neutral-600 hover:text-black transition-colors font-semibold cursor-pointer min-h-[36px]"
-              aria-label="Return to Atelier Index"
+              aria-label="Back to Home"
             >
               <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-1 pointer-events-none" />
-              <span className="pointer-events-none">Return to Index</span>
+              <span className="pointer-events-none">Back to Home</span>
             </Link>
 
             <div className="flex items-center gap-2 text-neutral-400">
-              <span>COMMUNICATION DESK</span>
+              <span>CUSTOMER SUPPORT</span>
               <span>&bull;</span>
-              <span className="text-black font-bold">KANPUR BENCH</span>
+              <span className="text-black font-bold">KANPUR WORKSHOP</span>
             </div>
           </nav>
         </section>
 
-        {/* 3. HERO TITLE & TELEMETRY */}
+        {/* HERO TITLE & TELEMETRY */}
         <section className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 mb-12 sm:mb-16">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-black/10">
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 font-semibold">
-                  Direct Atelier Hotline &bull; Kanpur Workshop
+                  Direct Workshop Hotline &bull; Kanpur Bench
                 </span>
               </div>
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black uppercase tracking-tighter text-black leading-none">
-                CONCIERGE DESK
+                HELP &amp; SUPPORT
               </h1>
             </div>
 
-            {/* Kanpur Live Workshop Telemetry Card */}
+            {/* Kanpur Live Workshop Clock */}
             <div className="border border-black bg-white p-4 sm:p-5 flex items-center gap-6 font-mono text-xs shrink-0 shadow-xs">
               <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-black" />
                 <div>
                   <span className="text-[10px] text-neutral-400 block uppercase">
-                    WORKSHOP BENCH TIME
+                    WORKSHOP TIME (IST)
                   </span>
-                  <span className="font-bold text-black text-sm">{kanpurTime || '09:00:00 AM IST'}</span>
+                  <span className="font-bold text-black text-sm">{kanpurTime || '10:00:00 AM IST'}</span>
                 </div>
               </div>
               <div className="border-l border-black/15 pl-6">
                 <span className="text-[10px] text-neutral-400 block uppercase">
-                  STATUS
+                  SUPPORT STATUS
                 </span>
                 <span className="font-bold text-emerald-700 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                  BENCH ACTIVE
+                  ONLINE &amp; ACTIVE
                 </span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 4. SPLIT GRID: LEFT CONCIERGE FORM / RIGHT WORKSHOP DOSSIER */}
+        {/* SPLIT GRID: FORM & WORKSHOP CONTACT DETAILS */}
         <section className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 mb-20 sm:mb-32">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 xl:gap-20 items-start">
             
-            {/* LEFT: FORM COMPONENT (7 COLS) */}
+            {/* LEFT: INQUIRY FORM */}
             <div className="lg:col-span-7 border border-black bg-white p-6 sm:p-10">
               <div className="flex items-center justify-between pb-3 mb-6 border-b border-black/10 font-mono text-[10px] sm:text-xs uppercase text-neutral-500">
-                <span>01 // BESPOKE SIZING &amp; DISPATCH INQUIRY</span>
-                <span>DIRECT LINE</span>
+                <span>01 // SEND US AN INQUIRY</span>
+                <span>EMAIL &amp; WHATSAPP</span>
               </div>
 
               {isSubmitted ? (
@@ -253,28 +282,39 @@ export default function ContactConciergePage() {
                 >
                   <CheckCircle2 className="w-12 h-12 text-black mb-4" />
                   <h3 className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-black mb-2">
-                    TRANSMISSION RECEIVED
+                    INQUIRY OPENED IN EMAIL
                   </h3>
                   <p className="text-xs sm:text-sm text-neutral-600 max-w-md mb-6 leading-relaxed">
-                    Our Kanpur bench master has logged your specifications. An official dossier response will be dispatched within 4 working hours.
+                    Your inquiry has been compiled and opened in your email tab. Please hit send, or chat directly with our Kanpur team on WhatsApp.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSubmitted(false);
-                      setFormData(INITIAL_INQUIRY);
-                    }}
-                    className="border border-black px-6 py-2.5 text-xs font-bold uppercase hover:bg-black hover:text-white transition-colors cursor-pointer"
-                  >
-                    Submit Another Inquiry
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a
+                      href={generateWhatsAppLink()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-black text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4 text-emerald-400" />
+                      <span>Message on WhatsApp</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSubmitted(false);
+                        setFormData(INITIAL_INQUIRY);
+                      }}
+                      className="border border-black px-6 py-2.5 text-xs font-bold uppercase hover:bg-neutral-100 transition-colors cursor-pointer"
+                    >
+                      Fill New Form
+                    </button>
+                  </div>
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] font-mono uppercase text-black font-semibold mb-1.5">
-                        Patron Full Name *
+                        Your Full Name *
                       </label>
                       <input
                         type="text"
@@ -282,14 +322,14 @@ export default function ContactConciergePage() {
                         required
                         value={formData.fullName}
                         onChange={handleInputChange}
-                        placeholder="e.g. Almas Siddiqui"
+                        placeholder="e.g. Rahul Sharma"
                         className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black px-3.5 py-2.5 text-xs font-mono focus:outline-none transition-colors"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-mono uppercase text-black font-semibold mb-1.5">
-                        Communication Email *
+                        Email Address *
                       </label>
                       <input
                         type="email"
@@ -297,7 +337,7 @@ export default function ContactConciergePage() {
                         required
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="patron@domain.com"
+                        placeholder="rahul@gmail.com"
                         className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black px-3.5 py-2.5 text-xs font-mono focus:outline-none transition-colors"
                       />
                     </div>
@@ -306,7 +346,7 @@ export default function ContactConciergePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="sm:col-span-1">
                       <label className="block text-[11px] font-mono uppercase text-black font-semibold mb-1.5">
-                        Topic Category
+                        Inquiry Topic
                       </label>
                       <select
                         name="topic"
@@ -314,12 +354,26 @@ export default function ContactConciergePage() {
                         onChange={handleInputChange}
                         className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black px-3 py-2.5 text-xs font-mono focus:outline-none transition-colors cursor-pointer"
                       >
-                        <option>Bespoke Sizing</option>
-                        <option>Monogram Stamping</option>
-                        <option>Wholesale Order</option>
-                        <option>Global Dispatch</option>
-                        <option>Leather Care Dossier</option>
+                        <option>Belt Sizing Help</option>
+                        <option>Order Tracking</option>
+                        <option>Size Exchange</option>
+                        <option>Bulk / Corporate Orders</option>
+                        <option>Leather Care Question</option>
                       </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono uppercase text-black font-semibold mb-1.5">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        placeholder="+91 98765 43210"
+                        className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black px-3.5 py-2.5 text-xs font-mono focus:outline-none transition-colors"
+                      />
                     </div>
 
                     <div>
@@ -335,84 +389,68 @@ export default function ContactConciergePage() {
                         className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black px-3.5 py-2.5 text-xs font-mono focus:outline-none transition-colors"
                       />
                     </div>
-
-                    <div>
-                      <label className="block text-[11px] font-mono uppercase text-black font-semibold mb-1.5">
-                        Initials (Max 3)
-                      </label>
-                      <input
-                        type="text"
-                        name="monogramInitials"
-                        maxLength={3}
-                        value={formData.monogramInitials}
-                        onChange={handleInputChange}
-                        placeholder="AS"
-                        className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black px-3.5 py-2.5 text-xs font-mono font-bold uppercase focus:outline-none transition-colors"
-                      />
-                    </div>
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-mono uppercase text-black font-semibold mb-1.5">
-                      Specific Instructions or Questions
+                      Your Message or Question
                     </label>
                     <textarea
                       name="message"
                       rows={4}
                       value={formData.message}
                       onChange={handleInputChange}
-                      placeholder="Specify your waist measurements, custom hole pitch, or questions regarding our Tuscan mimosa bark tannage..."
+                      placeholder="Tell us what you need help with regarding fit, product options, or dispatch times..."
                       className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black p-3.5 text-xs font-mono focus:outline-none transition-colors resize-none"
                     />
                   </div>
 
-                  {/* Dual Action Buttons: Form Submit or Instant WhatsApp */}
+                  {/* Dual Action: Send Email or Instant WhatsApp */}
                   <div className="flex flex-col sm:flex-row items-stretch gap-3 pt-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 bg-black text-white hover:bg-neutral-800 py-3.5 px-6 text-xs uppercase font-bold tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 font-mono"
+                      className="flex-1 bg-black text-white hover:bg-neutral-800 py-3.5 px-6 text-xs uppercase font-bold tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 font-mono shadow-xs active:scale-98"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      <span>{isSubmitting ? 'Transmitting...' : 'Dispatch Inquiry'}</span>
+                      <span>{isSubmitting ? 'Opening Mail...' : 'Send Inquiry via Email'}</span>
                     </button>
 
                     <a
                       href={generateWhatsAppLink()}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="border border-black bg-white hover:bg-neutral-100 py-3.5 px-6 text-xs uppercase font-bold tracking-widest transition-colors flex items-center justify-center gap-2 font-mono text-black"
+                      className="border border-black bg-white hover:bg-neutral-100 py-3.5 px-6 text-xs uppercase font-bold tracking-widest transition-colors flex items-center justify-center gap-2 font-mono text-black active:scale-98"
                     >
                       <MessageCircle className="w-4 h-4 text-emerald-600" />
-                      <span>Instant WhatsApp Concierge</span>
+                      <span>Chat on WhatsApp</span>
                     </a>
                   </div>
                 </form>
               )}
             </div>
 
-            {/* RIGHT: ATELIER DIRECTORY & LOCATION DOSSIER (5 COLS) */}
+            {/* RIGHT: CONTACT DETAILS & DISPATCH GUARANTEE */}
             <div className="lg:col-span-5 flex flex-col gap-6">
               
-              {/* Workshop Benchmark Box */}
               <div className="border border-black bg-white p-6 sm:p-8">
                 <span className="font-mono text-[10px] uppercase text-neutral-400 font-bold block mb-2">
-                  // PHYSICAL BENCHMARK
+                  // WORKSHOP LOCATION
                 </span>
                 <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-black mb-3">
-                  THE KANPUR ATELIER BENCH
+                  THE KANPUR WORKSHOP
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-600 font-normal leading-relaxed mb-6">
-                  Where raw Tuscan bark-tanned bovine butts are cut, beveled, and slicked by third-generation craftsmen. Visitors are hosted by private appointment only.
+                  Where genuine full-grain leather is cut, stitched, and finished by master craftsmen. Direct from factory with zero middlemen markups.
                 </p>
 
                 <div className="space-y-4 border-t border-black/10 pt-5 font-mono text-xs">
                   <div className="flex items-start gap-3">
                     <MapPin className="w-4 h-4 text-black shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-black uppercase block">Atelier Address</span>
+                      <span className="font-bold text-black uppercase block">Workshop Address</span>
                       <span className="text-neutral-500 text-[11px] leading-relaxed block">
-                        Jajmau Leather District, Kanpur, Uttar Pradesh 208010, India
+                        Jajmau Leather Cluster, Kanpur, Uttar Pradesh 208010, India
                       </span>
                     </div>
                   </div>
@@ -420,39 +458,40 @@ export default function ContactConciergePage() {
                   <div className="flex items-start gap-3">
                     <Mail className="w-4 h-4 text-black shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-black uppercase block">Official Transmission</span>
-                      <span className="text-neutral-500 text-[11px]">dispatch@hidewood.com</span>
+                      <span className="font-bold text-black uppercase block">Official Email</span>
+                      <a href="mailto:dispatch@hidewood.com" className="text-neutral-600 hover:text-black underline text-[11px]">
+                        dispatch@hidewood.com
+                      </a>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <Phone className="w-4 h-4 text-black shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-black uppercase block">Private Line</span>
+                      <span className="font-bold text-black uppercase block">Customer Helpline</span>
                       <span className="text-neutral-500 text-[11px]">+91 (0) 512 284 9102</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Courier Guarantees Box */}
               <div className="border border-black/15 bg-[#F4F4F0] p-6 font-mono text-xs">
                 <div className="flex items-center gap-2 mb-3 font-bold text-black uppercase">
                   <ShieldCheck className="w-4 h-4 text-black" />
-                  <span>Atelier Dispatch Protocol</span>
+                  <span>Customer Support Guarantees</span>
                 </div>
                 <ul className="space-y-2 text-[11px] text-neutral-600">
                   <li className="flex items-start gap-1.5">
                     <span className="font-bold text-black">&bull;</span>
-                    <span>All pieces packed inside air-tight sealed archival bags with natural cedarwood shavings.</span>
+                    <span>Direct WhatsApp sizing advice before dispatch.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="font-bold text-black">&bull;</span>
-                    <span>14-day zero-friction unworn size exchange policy on standard sizes.</span>
+                    <span>14-day hassle-free size exchange guarantee on all products.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="font-bold text-black">&bull;</span>
-                    <span>100-year structural integrity guarantee against collagen tear and hardware crack.</span>
+                    <span>Lifetime warranty on genuine leather and solid brass hardware.</span>
                   </li>
                 </ul>
               </div>
@@ -462,14 +501,14 @@ export default function ContactConciergePage() {
           </div>
         </section>
 
-        {/* 5. ATELIER FAQ PROTOCOL (ACCORDION) */}
+        {/* FREQUENTLY ASKED QUESTIONS */}
         <section className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12">
           <div className="border-t border-black/10 pt-10 mb-8 font-sans">
             <span className="font-mono text-[10px] sm:text-xs uppercase text-neutral-500 font-bold block mb-1">
-              // CLARIFICATIONS &amp; PROTOCOL
+              // HELPFUL INFORMATION
             </span>
             <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-black">
-              FREQUENTLY EXAMINED QUESTIONS
+              FREQUENTLY ASKED QUESTIONS
             </h2>
           </div>
 

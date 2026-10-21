@@ -2,28 +2,26 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 const BRAND_NAME = 'HIDEWOOD';
 
-// Exact delays aur zero-bounce curve (Unchanged)
 const LETTER_DELAYS = [0.12, 0.22, 0.16, 0.28, 0.14, 0.25, 0.18, 0.30];
 
-// Warning / Caution Tape Ticker Items
-const CAUTION_TAPE_ITEMS = [
-  'WARNING // DROP 01 ARCHIVE RUN: ONLY 14 STRAPS REMAINING',
-  'CAUTION // 100% UNSPLIT TUSCAN STEERHIDE — ZERO SYNTHETIC CARDBOARD CORE',
-  'NOTICE // 100-YEAR HERITAGE WARRANTY BOND INCLUDED WITH EVERY COMMISSION',
-  'RESTRICTED // BESPOKE SIZING ACTIVE — COMPLIMENTARY EXPEDITED DISPATCH OVER ₹5,000',
-  'CAUTION // DO NOT APPLY SYNTHETIC WAXES — VEGETABLE TANNIN PATINA IN PROGRESS',
+// RedTape inspired customer-friendly value guarantees
+const COMMERCIAL_HIGHLIGHTS = [
+  '100% REAL FULL-GRAIN LEATHER — ZERO CARDBOARD FILLERS',
+  'FREE EXPRESS DELIVERY ON ORDERS ABOVE ₹5,000 ACROSS INDIA',
+  'LIFETIME REPAIR & DURABILITY GUARANTEE ON EVERY BELT',
+  'EASY 14-DAY SIZE REPLACEMENT & HASSLE-FREE RETURNS',
+  'PURE SOLID BRASS BUCKLES — BUILT TO NEVER SNAP OR TARNISH',
 ];
 
 export default function HeroTitle() {
   return (
-    /* FULL VIEWPORT BREAKOUT: w-screen left-1/2 -translate-x-1/2 makes it edge-to-edge */
     <section className="relative w-screen left-1/2 -translate-x-1/2 pt-1 pb-4 sm:pb-6 select-none overflow-hidden">
       
-      {/* 1. ORIGINAL GIANT TALL EDITORIAL HEADLINE WITH ATTACHED TM */}
+      {/* 1. GIANT EDITORIAL HEADLINE */}
       <div className="relative overflow-visible w-full px-2 sm:px-4 md:px-6">
         <div className="w-full flex items-end justify-between overflow-visible">
           
@@ -51,7 +49,6 @@ export default function HeroTitle() {
                       {char}
                     </motion.span>
 
-                    {/* TM MARK: Seedhe aakhiri letter 'D' ke saath attached */}
                     {isLast && (
                       <span className="relative inline-block overflow-hidden self-end pb-1 pl-0.5 sm:pl-1 select-none">
                         <motion.span
@@ -76,7 +73,7 @@ export default function HeroTitle() {
 
         </div>
 
-        {/* 2. FULL-BLEED BOTTOM DIVIDER LINE (Halka sa gap restore kiya) */}
+        {/* 2. FULL-BLEED BOTTOM DIVIDER LINE */}
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
@@ -85,7 +82,7 @@ export default function HeroTitle() {
         />
       </div>
 
-      {/* 3. ATELIER HAZARD / CAUTION WARNING RIBBON RUNWAY (EDGE-TO-EDGE FULL BLEED) */}
+      {/* 3. RUNNING TICKER RIBBON (Commercial & Clean) */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -101,22 +98,21 @@ export default function HeroTitle() {
             repeat: Infinity,
           }}
         >
-          {[...CAUTION_TAPE_ITEMS, ...CAUTION_TAPE_ITEMS].map((text, idx) => (
+          {[...COMMERCIAL_HIGHLIGHTS, ...COMMERCIAL_HIGHLIGHTS].map((text, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-3 sm:gap-3.5 px-4 sm:px-6 font-mono text-[10px] sm:text-xs uppercase tracking-widest font-black"
+              className="flex items-center gap-3 sm:gap-3.5 px-4 sm:px-6 font-mono text-[10px] sm:text-xs uppercase tracking-widest font-bold"
             >
-              <span className="text-[#FFCC00] flex items-center gap-1.5 shrink-0">
-                <AlertTriangle className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-[#FFCC00] stroke-[2.5]" />
-                <span className="font-mono text-[9px] sm:text-[10px] tracking-tighter">///</span>
+              <span className="text-white flex items-center gap-1.5 shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
               </span>
 
-              <span className="text-white hover:text-[#FFCC00] transition-colors">
+              <span className="text-white hover:text-neutral-300 transition-colors">
                 {text}
               </span>
 
-              <span className="text-neutral-600 font-mono font-bold pl-1 sm:pl-2">
-                /// [ATELIER SECURE] ///
+              <span className="text-neutral-500 font-mono font-bold pl-1 sm:pl-2">
+                &bull;
               </span>
             </div>
           ))}

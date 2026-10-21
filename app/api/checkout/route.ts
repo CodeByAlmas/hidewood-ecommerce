@@ -17,7 +17,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
 
-    // 1. Re-validate prices from Database
+    if (!customerEmail || !customerEmail.includes('@')) {
+      return NextResponse.json({ error: 'Valid customer email is required' }, { status: 400 });
+    }
+
+    // 1. Re-validate prices from Database (Tamper Protection)
     const productIds = items.map((i: any) => i.productId);
     const dbProducts = await prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -30,20 +34,22 @@ export async function POST(req: Request) {
       const product = dbProducts.find((p: any) => p.id === item.productId);
       if (!product || !product.inStock) {
         return NextResponse.json(
-          { error: `Item ${item.productId} is unavailable` },
+          { error: `Item ${item.productId} is unavailable or out of stock` },
           { status: 400 }
         );
       }
 
       calculatedTotal += product.price * item.quantity;
+
       lineItems.push({
         price_data: {
           currency: 'inr',
           product_data: {
-            name: `${product.name} (Width: ${item.width}, Waist: ${item.size}")`,
-            images: product.images,
+            name: `${product.name} (Width: ${item.width || '38mm'}, Size: ${item.size || 'Standard'}")`,
+            images: Array.isArray(product.images) && product.images.length > 0 ? [product.images[0]] : [],
           },
-          unit_amount: product.price,
+          // Stripe requires amounts in the smallest currency unit (paise for INR)
+          unit_amount: Math.round(product.price * 100),
         },
         quantity: item.quantity,
       });
@@ -52,15 +58,19 @@ export async function POST(req: Request) {
     // 2. Create pending order in database
     const order = await prisma.order.create({
       data: {
-        customerEmail,
-        shippingAddr: shippingDetails,
+        customerEmail: customerEmail.trim().toLowerCase(),
+        shippingAddr: shippingDetails || {},
         totalAmount: calculatedTotal,
         paymentGateway: 'STRIPE',
         status: 'PENDING',
         items: {
           create: items.map((i: any) => ({
             productId: i.productId,
-            variantInfo: { size: i.size, width: i.width, buckle: i.buckle },
+            variantInfo: {
+              size: i.size || '34',
+              width: i.width || '38mm',
+              buckle: i.buckle || 'Solid Cast Brass',
+            },
             quantity: i.quantity,
             unitPrice: dbProducts.find((p: any) => p.id === i.productId)!.price,
           })),
@@ -68,24 +78,31 @@ export async function POST(req: Request) {
       },
     });
 
-    // 3. Initialize Stripe Checkout Session
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    // 3. Initialize Stripe Checkout Session with full Edge-Case recovery URLs
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      customer_email: customerEmail,
+      customer_email: customerEmail.trim().toLowerCase(),
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/order/success?orderId=${order.id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/cart`,
+      success_url: `${baseUrl}/order/success?orderId=${order.id}`,
+      cancel_url: `${baseUrl}/order/failed?orderId=${order.id}`,
       metadata: {
         orderId: order.id,
       },
+      payment_intent_data: {
+        metadata: {
+          orderId: order.id,
+        },
+      },
     });
 
-    return NextResponse.json({ sessionUrl: session.url });
+    return NextResponse.json({ sessionUrl: session.url, orderId: order.id });
   } catch (error: any) {
     console.error('Checkout error:', error);
     return NextResponse.json(
-      { error: 'Internal server payment failure' },
+      { error: error.message || 'Internal server payment failure' },
       { status: 500 }
     );
   }

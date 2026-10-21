@@ -30,46 +30,46 @@ const CATEGORIES_DATA: ParentCategory[] = [
   {
     id: 'cat-belts',
     num: '01',
-    code: 'DISCIPLINE // 01',
-    name: 'Leather Belts',
+    code: 'CATEGORY // 01',
+    name: 'Genuine Leather Belts',
     status: 'In Stock',
-    tagline: 'Pure 4.2mm full-grain leather belts with solid sand-cast brass buckles.',
+    tagline: 'Pure 4.2mm thick real leather belts fitted with unbreakable solid brass buckles.',
     image: '/belt-macro.png',
     subCategories: [
       {
         id: 'sub-formal',
         num: '01',
         name: 'Formal Dress Belts',
-        badge: '32mm Profile',
-        rangeCount: '4 Cuts',
-        spec: 'Tailored Suiting Edge',
+        badge: '32mm Slim Width',
+        rangeCount: '4 Colors',
+        spec: 'Smooth edge tailored for formal trousers',
         image: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-casual',
         num: '02',
         name: 'Casual Jeans Belts',
-        badge: '40mm Harness',
-        rangeCount: '3 Cuts',
-        spec: 'Solid Brass Roller',
+        badge: '40mm Wide Fit',
+        rangeCount: '3 Colors',
+        spec: 'Heavy roller buckle for raw denim',
         image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-reversible',
         num: '03',
-        name: 'Reversible 2-in-1',
+        name: 'Reversible 2-in-1 Belts',
         badge: '34mm Swivel',
-        rangeCount: 'Dual Face',
-        spec: 'Black & Tan Flip',
+        rangeCount: '2-in-1 Value',
+        spec: 'Twist buckle to switch Black & Brown',
         image: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-raw',
         num: '04',
-        name: 'Raw Patina Belts',
-        badge: '38mm Untreated',
-        rangeCount: 'Heirloom',
-        spec: 'Ages With Sunlight',
+        name: 'Raw Natural Leather Belts',
+        badge: '38mm Uncolored',
+        rangeCount: 'Tan to Dark',
+        spec: 'Naturally turns darker as you wear it',
         image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop',
       },
     ],
@@ -77,37 +77,37 @@ const CATEGORIES_DATA: ParentCategory[] = [
   {
     id: 'cat-wallets-edc',
     num: '02',
-    code: 'DISCIPLINE // 02',
-    name: 'Wallets & EDC',
+    code: 'CATEGORY // 02',
+    name: 'Wallets & Cardholders',
     status: 'Launching Soon',
-    tagline: 'Slim bifold wallets, card sleeves, and MagSafe leather phone cases.',
+    tagline: 'Slim bifold wallets, minimalist card cases, and real leather phone covers.',
     image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1200&auto=format&fit=crop',
     subCategories: [
       {
         id: 'sub-bifold',
         num: '01',
-        name: 'Classic Bifolds',
+        name: 'Classic Bifold Wallets',
         badge: '8 Cards + Cash',
-        rangeCount: 'Phase 02',
-        spec: 'Flush Beeswax Edge',
+        rangeCount: 'Slim Pocket Fit',
+        spec: 'Thin profile that fits flat in your pocket',
         image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-cardholder',
         num: '02',
-        name: 'Card Sleeves',
-        badge: 'Minimal EDC',
-        rangeCount: 'Daily Carry',
-        spec: 'Single Fold Steerhide',
+        name: 'Minimal Card Holders',
+        badge: 'Holds 6 Cards',
+        rangeCount: 'Ultra Slim',
+        spec: 'Quick front-pocket daily card access',
         image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-phone-case',
         num: '03',
-        name: 'Leather Phone Cases',
+        name: 'Leather Phone Covers',
         badge: 'MagSafe Ready',
-        rangeCount: 'Pre-Order',
-        spec: 'Vegetable-Tanned Shell',
+        rangeCount: 'All Sizes',
+        spec: 'Protective real leather with built-in magnets',
         image: 'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=600&auto=format&fit=crop',
       },
     ],
@@ -115,28 +115,28 @@ const CATEGORIES_DATA: ParentCategory[] = [
   {
     id: 'cat-carry',
     num: '03',
-    code: 'DISCIPLINE // 03',
-    name: 'Travel & Bags',
+    code: 'CATEGORY // 03',
+    name: 'Travel Bags & Duffels',
     status: 'Coming Soon',
-    tagline: 'Spacious weekend holdalls, field duffels, and structural leather baggage.',
+    tagline: 'Large weekend duffel bags, carry-on holdalls, and reinforced leather backpacks.',
     image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200&auto=format&fit=crop',
     subCategories: [
       {
         id: 'sub-duffle',
         num: '01',
-        name: 'Weekend Duffles',
-        badge: '32L Holdall',
-        rangeCount: 'Vault Blueprint',
-        spec: 'Wrap-Around Harness',
+        name: 'Weekend Travel Duffels',
+        badge: 'Cabin Size',
+        rangeCount: '45L Capacity',
+        spec: 'Continuous wrap-around heavy leather handles',
         image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-tote',
         num: '02',
-        name: 'Monolithic Field Totes',
-        badge: 'Heavy Steer',
-        rangeCount: 'Archive',
-        spec: 'Copper Rivet Anchors',
+        name: 'Everyday Leather Totes',
+        badge: 'Laptop Ready',
+        rangeCount: 'Heavy Duty',
+        spec: 'Reinforced copper rivets for heavy weight',
         image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=600&auto=format&fit=crop',
       },
     ],
@@ -144,46 +144,46 @@ const CATEGORIES_DATA: ParentCategory[] = [
   {
     id: 'cat-outerwear-tack',
     num: '04',
-    code: 'DISCIPLINE // 04',
-    name: 'Jackets & Tack',
+    code: 'CATEGORY // 04',
+    name: 'Leather Jackets & Gear',
     status: 'Coming Soon',
-    tagline: 'Tea-core leather jackets, saddlery equestrian tack, deerskin gloves & hats.',
+    tagline: 'Heavy rider leather jackets, handmade leather gloves, and classic hats.',
     image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1200&auto=format&fit=crop',
     subCategories: [
       {
         id: 'sub-jacket',
         num: '01',
-        name: 'Double Rider Jacket',
-        badge: '1.4mm Horsehide',
-        rangeCount: 'Winter Drop',
-        spec: 'Cupro Satin Lining',
+        name: 'Biker Leather Jackets',
+        badge: 'Heavy Genuine Hide',
+        rangeCount: 'Pure Leather',
+        spec: 'Solid metal zippers with smooth inner lining',
         image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-equestrian',
         num: '02',
-        name: 'Saddlery & Tack',
-        badge: '5.5mm Thickness',
-        rangeCount: 'Bespoke Order',
-        spec: 'Hand-Waxed Stirrups',
+        name: 'Heavy Saddle Straps',
+        badge: 'Extra Thick',
+        rangeCount: 'Custom Made',
+        spec: 'Built for intense outdoor strength',
         image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-gloves',
         num: '03',
-        name: 'Artisanal Gloves',
-        badge: 'Deerskin',
-        rangeCount: 'Autumn Drop',
-        spec: 'External Seam Stitch',
+        name: 'Winter Driving Gloves',
+        badge: 'Soft Leather',
+        rangeCount: 'Thermal Grip',
+        spec: 'Snug fit with soft fleece lining',
         image: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-hats',
         num: '04',
-        name: 'Leather Hats & Caps',
-        badge: '6-Panel Block',
-        rangeCount: 'Phase 04',
-        spec: 'Oiled Roughout',
+        name: 'Leather Caps & Hats',
+        badge: 'Structured Fit',
+        rangeCount: 'Adjustable',
+        spec: 'Weather-resistant oiled real leather',
         image: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8?q=80&w=600&auto=format&fit=crop',
       },
     ],
@@ -191,28 +191,28 @@ const CATEGORIES_DATA: ParentCategory[] = [
   {
     id: 'cat-footwear',
     num: '05',
-    code: 'DISCIPLINE // 05',
-    name: 'Footwear Atelier',
+    code: 'CATEGORY // 05',
+    name: 'Handcrafted Footwear',
     status: 'Coming Soon',
-    tagline: 'Goodyear welted shoes, dress boots, raw-edge slides, and home slippers.',
+    tagline: 'Formal leather shoes, derby lace-ups, slip-on loafers, and comfort leather slides.',
     image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1200&auto=format&fit=crop',
     subCategories: [
       {
         id: 'sub-loafer',
         num: '01',
-        name: 'Penny Loafers & Boots',
-        badge: 'Calfskin',
-        rangeCount: 'Phase 03',
-        spec: 'Oak-Bark Tanned Soles',
+        name: 'Formal Loafers & Derbys',
+        badge: 'Pure Leather Soles',
+        rangeCount: 'Classic Fit',
+        spec: 'Replaceable leather soles for decade-long wear',
         image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop',
       },
       {
         id: 'sub-sandal',
         num: '02',
-        name: 'Sandals & Slippers',
-        badge: 'Barefoot Cut',
-        rangeCount: 'Summer Vault',
-        spec: 'Solid Brass Buckles',
+        name: 'Comfort Leather Sandals',
+        badge: 'Ergonomic Bed',
+        rangeCount: 'Brass Buckles',
+        spec: 'Contoured natural leather footbed for all-day comfort',
         image: 'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?q=80&w=600&auto=format&fit=crop',
       },
     ],
@@ -257,7 +257,7 @@ export default function CategoryRunway({
       <section
         ref={sectionRef}
         id="categories"
-        aria-label="Atelier Craft Disciplines & Categories"
+        aria-label="Shop By Categories"
         className="relative w-screen left-1/2 -translate-x-1/2 pt-1 pb-4 sm:pb-6 select-none overflow-hidden"
       >
         <div className="w-full px-2 sm:px-4 md:px-6">
@@ -265,11 +265,11 @@ export default function CategoryRunway({
             <div className="flex items-center gap-2 sm:gap-2.5">
               <span className="w-2 h-2 rounded-full bg-black animate-pulse shrink-0" />
               <h2 className="text-[11px] sm:text-xs uppercase tracking-widest font-semibold text-black">
-                Shop by Categories &bull; 5 Master Disciplines
+                Shop By Category &bull; 100% Genuine Leather
               </h2>
             </div>
             <p className="text-[10px] sm:text-xs text-neutral-500 font-medium font-mono">
-              Series 01 Belts In Stock &bull; Disciplines 02–05 In Tannage
+              Belts In Stock &bull; Ready to Ship Across India
             </p>
           </div>
 
@@ -283,7 +283,7 @@ export default function CategoryRunway({
             transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
-            {/* 1. MOBILE TOUCH CARDS (Natural Color Restored) */}
+            {/* 1. MOBILE TOUCH CARDS */}
             <div className="flex md:hidden flex-col gap-3 w-full">
               {CATEGORIES_DATA.map((cat) => {
                 const isLive = cat.status === 'In Stock';
@@ -331,7 +331,7 @@ export default function CategoryRunway({
                         </p>
                       </div>
                       <div className="flex items-center gap-1 font-mono text-[9px] uppercase font-bold bg-white text-black px-2 py-0.5 shrink-0">
-                        <span>Inspect</span>
+                        <span>Explore</span>
                         <ArrowUpRight className="w-3 h-3" />
                       </div>
                     </div>
@@ -340,7 +340,7 @@ export default function CategoryRunway({
               })}
             </div>
 
-            {/* 2. DESKTOP ACCORDION (Natural Color Restored) */}
+            {/* 2. DESKTOP ACCORDION */}
             <div className="hidden md:flex flex-row w-full gap-3 lg:gap-4 items-stretch">
               {CATEGORIES_DATA.map((cat, idx) => {
                 const isSelected = activeCard === idx;
@@ -422,11 +422,11 @@ export default function CategoryRunway({
                           <div className="flex items-center justify-between pt-2 border-t border-white/15 text-[11px] font-mono uppercase">
                             <span className="text-neutral-400 flex items-center gap-1 text-[10px]">
                               <Sparkles className="w-3 h-3 text-white" />
-                              {cat.subCategories.length} Items Configured
+                              {cat.subCategories.length} Styles Available
                             </span>
 
                             <span className="inline-flex items-center gap-1 text-white font-bold group-hover:text-neutral-200">
-                              <span>Explore Details</span>
+                              <span>View Collection</span>
                               <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 ease-[0.16,1,0.3,1] group-hover:rotate-45 group-hover:translate-x-0.5" />
                             </span>
                           </div>
@@ -450,7 +450,7 @@ export default function CategoryRunway({
         </div>
       </section>
 
-      {/* COMPACT ATELIER SUB-CATEGORY DRAWER MODAL */}
+      {/* POPUP SUB-CATEGORY MODAL */}
       <AnimatePresence>
         {glassModalCat && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 select-none">
@@ -490,14 +490,16 @@ export default function CategoryRunway({
                       </span>
                     </div>
                     <p className="text-[10px] sm:text-[11px] text-neutral-400 font-mono">
-                      [ {glassModalCat.subCategories.length} Disciplines Configured ] &bull; Select to inspect piece
+                      [ {glassModalCat.subCategories.length} Styles Available ] &bull; Tap any style to view details
                     </p>
                   </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => setGlassModalCat(null)}
                   className="p-1.5 sm:p-2 border border-white/20 hover:border-white bg-white/5 hover:bg-white text-white hover:text-black cursor-pointer transition-colors"
+                  aria-label="Close modal"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -514,12 +516,11 @@ export default function CategoryRunway({
                     className="group relative flex-1 min-w-[200px] sm:min-w-[220px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white transition-all duration-300 cursor-pointer p-3 sm:p-3.5 flex flex-col justify-between"
                   >
                     <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-mono uppercase pb-2 border-b border-white/10 mb-2.5 sm:mb-3 text-neutral-400">
-                      <span>LINE 0{sub.num}</span>
+                      <span>OPTION 0{sub.num}</span>
                       <span className="text-white font-bold">{sub.rangeCount}</span>
                     </div>
 
                     <div className="relative aspect-[4/3] w-full bg-neutral-900 overflow-hidden border border-white/10 mb-2.5 sm:mb-3">
-                      {/* Natural Leather Color (Grayscale removed) */}
                       <img
                         src={sub.image}
                         alt={sub.name}
@@ -553,7 +554,7 @@ export default function CategoryRunway({
                       </h4>
 
                       <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[9px] sm:text-[10px] font-mono uppercase font-bold text-white">
-                        <span>{glassModalCat.status === 'In Stock' ? 'Explore Piece' : 'Join Waitlist'}</span>
+                        <span>{glassModalCat.status === 'In Stock' ? 'Shop Now' : 'Join Waitlist'}</span>
                         <div className="w-5 sm:w-6 h-5 sm:h-6 rounded-full border border-white/20 group-hover:border-white flex items-center justify-center">
                           <ArrowUpRight className="w-3 sm:w-3.5 h-3 sm:h-3.5 transition-transform duration-300 ease-[0.16,1,0.3,1] group-hover:rotate-45 group-hover:translate-x-0.5" />
                         </div>
@@ -564,8 +565,8 @@ export default function CategoryRunway({
               </div>
 
               <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-[9px] sm:text-[10px] font-mono text-neutral-500 uppercase">
-                <span>Santa Croce Tuscan Full-Grain Hide &bull; Kanpur Handcraft</span>
-                <span className="text-neutral-400">HIDEWOOD ATELIER &bull; INDIA</span>
+                <span>100% Genuine Full-Grain Leather &bull; Handcrafted in Kanpur</span>
+                <span className="text-neutral-400">HIDEWOOD LEATHER &bull; INDIA</span>
               </div>
             </motion.div>
           </div>
