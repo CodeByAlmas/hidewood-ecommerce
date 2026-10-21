@@ -2,13 +2,19 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/db';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16' as any,
-});
+export const dynamic = 'force-dynamic';
+
+function getStripeClient() {
+  const apiKey = process.env.STRIPE_SECRET_KEY || 'sk_test_build_placeholder';
+  return new Stripe(apiKey, {
+    apiVersion: '2023-10-16' as any,
+  });
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(req: Request) {
+  const stripe = getStripeClient();
   const body = await req.text();
   const signature = req.headers.get('stripe-signature') || '';
 
@@ -55,7 +61,6 @@ export async function POST(req: Request) {
           },
         });
       } catch {
-        // Fallback agar Prisma schema me FAILED enum na hokar CANCELLED ho
         try {
           await (prisma.order.update as any)({
             where: { id: orderId },
