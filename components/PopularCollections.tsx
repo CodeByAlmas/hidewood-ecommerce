@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 
 interface StyleCollection {
@@ -67,28 +67,38 @@ const STYLES: StyleCollection[] = [
 ];
 
 function StyleCard({ item }: { item: StyleCollection }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef, { once: true, amount: 0.05 });
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <article
+      ref={cardRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group flex flex-col justify-between cursor-pointer w-full select-none"
     >
       <Link href={item.link} className="block w-full">
-        {/* Visual Stage matching ProductGrid's exact zero-border aesthetic */}
-        <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-200/50 mb-2 sm:mb-2.5">
-          {/* Primary View */}
-          <img
-            src={item.images[0]}
-            alt={item.name}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=900&auto=format&fit=crop';
-            }}
-          />
+        {/* White Backdrop Before Scroll Reveal */}
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-white mb-2 sm:mb-2.5">
+          {/* Primary View: Left-to-Right Wipe on Scroll */}
+          <motion.div
+            initial={{ x: '-101%' }}
+            animate={isInView ? { x: '0%' } : { x: '-101%' }}
+            transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 w-full h-full will-change-transform"
+          >
+            <img
+              src={item.images[0]}
+              alt={item.name}
+              loading="lazy"
+              className="w-full h-full object-cover pointer-events-none transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=900&auto=format&fit=crop';
+              }}
+            />
+          </motion.div>
 
           {/* Secondary View Slider on Hover */}
           <motion.img
@@ -106,7 +116,6 @@ function StyleCard({ item }: { item: StyleCollection }) {
             }}
           />
 
-          {/* Minimal Top Badges */}
           <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 z-20 flex items-center gap-1 pointer-events-none">
             <span className="bg-black text-white text-[8px] sm:text-[9px] font-mono uppercase px-1.5 sm:px-2 py-0.5 font-bold">
               {item.badge}
@@ -118,7 +127,6 @@ function StyleCard({ item }: { item: StyleCollection }) {
           </div>
         </div>
 
-        {/* Minimal Bottom Metadata */}
         <div className="flex items-baseline justify-between gap-1 sm:gap-2 font-mono text-[10px] sm:text-xs">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0" />
@@ -150,7 +158,6 @@ export default function PopularCollections() {
       className="relative w-screen left-1/2 -translate-x-1/2 pt-1 pb-8 sm:pb-12 overflow-hidden select-none"
     >
       <div className="w-full px-3 sm:px-6 md:px-8">
-        {/* Left Reveal Header Ribbon (Theme Aligned) */}
         <motion.div
           initial={{ opacity: 0, x: -35 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -179,18 +186,11 @@ export default function PopularCollections() {
           </div>
         </motion.div>
 
-        {/* Left-to-Right Reveal Grid matching ProductGrid & Lifestyle */}
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.08 }}
-          transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full"
-        >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full">
           {STYLES.map((style) => (
             <StyleCard key={style.id} item={style} />
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

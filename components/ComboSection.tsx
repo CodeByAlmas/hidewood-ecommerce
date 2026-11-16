@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 
 interface ComboItem {
@@ -54,6 +54,70 @@ const UPCOMING_COMBOS: ComboItem[] = [
   },
 ];
 
+function ComboCard({ combo }: { combo: ComboItem }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef, { once: true, amount: 0.05 });
+
+  return (
+    <article
+      ref={cardRef}
+      className="group flex flex-col justify-between cursor-pointer w-full select-none"
+    >
+      <Link href="/reservation" className="block w-full">
+        {/* White Backdrop + Left-to-Right Wipe on Scroll */}
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-white mb-2 sm:mb-2.5">
+          <motion.div
+            initial={{ x: '-101%' }}
+            animate={isInView ? { x: '0%' } : { x: '-101%' }}
+            transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 w-full h-full will-change-transform"
+          >
+            <img
+              src={combo.image}
+              alt={combo.name}
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = combo.fallbackImage;
+              }}
+              className="w-full h-full object-cover pointer-events-none transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105"
+            />
+          </motion.div>
+
+          <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 z-20 flex items-center gap-1 pointer-events-none">
+            <span className="bg-black text-white text-[8px] sm:text-[9px] font-mono uppercase px-1.5 sm:px-2 py-0.5 font-bold">
+              {combo.badge}
+            </span>
+          </div>
+
+          <div className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 z-20 bg-white/95 backdrop-blur-xs text-black text-[8px] sm:text-[9px] font-mono uppercase px-1.5 sm:px-2 py-0.5 font-bold shadow-xs pointer-events-none">
+            {combo.price}
+          </div>
+        </div>
+
+        <div className="flex items-baseline justify-between gap-1 sm:gap-2 font-mono text-[10px] sm:text-xs">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0" />
+            <h3 className="font-bold text-black uppercase tracking-tight truncate group-hover:underline">
+              {combo.name}
+            </h3>
+          </div>
+
+          <div className="text-right shrink-0">
+            <span className="font-bold text-red-600 flex items-center gap-0.5">
+              <span>Notify</span>
+              <ArrowUpRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </span>
+          </div>
+        </div>
+
+        <p className="text-[9px] sm:text-[10px] text-neutral-500 font-sans truncate mt-0.5">
+          {combo.spec}
+        </p>
+      </Link>
+    </article>
+  );
+}
+
 export default function ComboSection() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -76,14 +140,11 @@ export default function ComboSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Exactly matching PopularCollections: relative w-screen left-1/2 -translate-x-1/2 with pt-1 pb-8 */}
       <section
         aria-label="Upcoming Handcrafted Leather Combos"
         className="relative w-screen left-1/2 -translate-x-1/2 pt-1 pb-8 sm:pb-12 overflow-hidden select-none"
       >
         <div className="w-full px-3 sm:px-6 md:px-8">
-          
-          {/* Header Ribbon - Exact match with PopularCollections style & motion */}
           <motion.div
             initial={{ opacity: 0, x: -35 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -112,70 +173,11 @@ export default function ComboSection() {
             </div>
           </motion.div>
 
-          {/* Grid matching PopularCollections: 4 cols on desktop, 2 cols on mobile, exact aspect-[3/4] */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.08 }}
-            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full"
-          >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full">
             {UPCOMING_COMBOS.map((combo) => (
-              <article
-                key={combo.id}
-                className="group flex flex-col justify-between cursor-pointer w-full select-none"
-              >
-                <Link href="/reservation" className="block w-full">
-                  {/* Visual Stage matching PopularCollections exact aspect-[3/4] */}
-                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-200/50 mb-2 sm:mb-2.5">
-                    <img
-                      src={combo.image}
-                      alt={combo.name}
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = combo.fallbackImage;
-                      }}
-                      className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105"
-                    />
-
-                    {/* Top-Left Category Badge */}
-                    <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 z-20 flex items-center gap-1 pointer-events-none">
-                      <span className="bg-black text-white text-[8px] sm:text-[9px] font-mono uppercase px-1.5 sm:px-2 py-0.5 font-bold">
-                        {combo.badge}
-                      </span>
-                    </div>
-
-                    {/* Top-Right Price Badge */}
-                    <div className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 z-20 bg-white/95 backdrop-blur-xs text-black text-[8px] sm:text-[9px] font-mono uppercase px-1.5 sm:px-2 py-0.5 font-bold shadow-xs pointer-events-none">
-                      {combo.price}
-                    </div>
-                  </div>
-
-                  {/* Minimal Bottom Metadata matching StyleCard */}
-                  <div className="flex items-baseline justify-between gap-1 sm:gap-2 font-mono text-[10px] sm:text-xs">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0" />
-                      <h3 className="font-bold text-black uppercase tracking-tight truncate group-hover:underline">
-                        {combo.name}
-                      </h3>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="font-bold text-red-600 flex items-center gap-0.5">
-                        <span>Notify</span>
-                        <ArrowUpRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-[9px] sm:text-[10px] text-neutral-500 font-sans truncate mt-0.5">
-                    {combo.spec}
-                  </p>
-                </Link>
-              </article>
+              <ComboCard key={combo.id} combo={combo} />
             ))}
-          </motion.div>
-
+          </div>
         </div>
       </section>
     </>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, Suspense, useRef, useEffect } from 'react';
+import React, { useMemo, Suspense, useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -15,12 +15,11 @@ import {
   Sparkles,
   ArrowUpRight,
   BadgeCheck,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 
-// ========================================================
-// 3D INTERACTIVE TILT CERTIFICATE CARD
-// ========================================================
 function Certificate3DCard({
   orderId,
   dateIssued,
@@ -69,7 +68,6 @@ function Certificate3DCard({
         }}
         className="w-full max-w-[620px] border-2 border-black bg-gradient-to-br from-neutral-900 via-black to-neutral-950 text-white p-6 sm:p-10 shadow-[14px_14px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden group cursor-pointer transition-shadow"
       >
-        {/* Holographic Specular Glow Mesh */}
         <div
           className="absolute inset-0 opacity-20 pointer-events-none group-hover:opacity-35 transition-opacity duration-700"
           style={{
@@ -77,7 +75,6 @@ function Certificate3DCard({
           }}
         />
 
-        {/* Certificate Header */}
         <div className="flex items-center justify-between z-10 font-mono text-[10px] sm:text-xs pb-4 border-b border-white/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -90,7 +87,6 @@ function Certificate3DCard({
           </span>
         </div>
 
-        {/* Brand & Identification */}
         <div className="py-6 z-10">
           <div className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white leading-none mb-2 font-sans">
             HIDEWOOD
@@ -100,7 +96,6 @@ function Certificate3DCard({
           </div>
         </div>
 
-        {/* Specs Highlights */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-3 border-t border-white/10 font-mono text-[10px] uppercase text-neutral-400">
           <div>
             <span className="block text-neutral-500 text-[8px]">// MATERIAL</span>
@@ -116,7 +111,6 @@ function Certificate3DCard({
           </div>
         </div>
 
-        {/* Footer Timestamp & Verification */}
         <div className="flex items-end justify-between z-10 border-t border-white/10 pt-4 font-mono text-[9px] sm:text-[10px] text-neutral-400 uppercase">
           <div>
             <span className="block text-neutral-500 text-[8px]">// ISSUED DATE</span>
@@ -139,20 +133,53 @@ function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const rawOrderId = searchParams.get('orderId') || searchParams.get('session_id') || '';
 
-  // Sanitize order ID to prevent XSS injection
+  const [verificationStatus, setVerificationStatus] = useState<'loading' | 'verified' | 'pending' | 'invalid'>('loading');
+  const [orderData, setOrderData] = useState<any>(null);
+
   const safeOrderId = useMemo(() => {
     const cleaned = rawOrderId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
-    return cleaned ? cleaned.toUpperCase() : `HW-${Math.floor(100000 + Math.random() * 900000)}`;
+    return cleaned ? cleaned.toUpperCase() : '';
   }, [rawOrderId]);
 
-  // Clean the cart on successful checkout
+  // Server-side verification of order status to prevent unauthenticated access
   useEffect(() => {
-    try {
-      useCartStore.getState().items = [];
-    } catch {
-      // Ignored
+    if (!safeOrderId) {
+      setVerificationStatus('invalid');
+      return;
     }
-  }, []);
+
+    let isMounted = true;
+    const verifyOrder = async () => {
+      try {
+        const res = await fetch(`/api/orders/verify?orderId=${encodeURIComponent(safeOrderId)}`, {
+          cache: 'no-store',
+        });
+        const data = await res.json();
+
+        if (!isMounted) return;
+
+        if (res.ok && data.status === 'PAID') {
+          setVerificationStatus('verified');
+          setOrderData(data.order);
+          // Clear cart on confirmed verified purchase
+          try {
+            useCartStore.getState().items = [];
+          } catch {}
+        } else if (data.status === 'PENDING') {
+          setVerificationStatus('pending');
+        } else {
+          setVerificationStatus('invalid');
+        }
+      } catch (err) {
+        if (isMounted) setVerificationStatus('invalid');
+      }
+    };
+
+    verifyOrder();
+    return () => {
+      isMounted = false;
+    };
+  }, [safeOrderId]);
 
   const dateIssued = useMemo(() => {
     return new Intl.DateTimeFormat('en-IN', {
@@ -162,30 +189,62 @@ function OrderSuccessContent() {
     }).format(new Date());
   }, []);
 
-  // SEO & AEO Structured Data Schema
+  if (verificationStatus === 'loading') {
+    return (
+      <div className="max-w-[1400px] mx-auto px-4 py-28 text-center font-mono text-xs uppercase text-neutral-500 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
+        <span>Verifying secure payment status with atelier gateway...</span>
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'pending') {
+    return (
+      <div className="max-w-[1400px] mx-auto px-4 py-24 text-center font-mono max-w-xl bg-white border border-black p-10">
+        <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+        <h1 className="text-xl font-bold uppercase mb-2">Payment Verification Pending</h1>
+        <p className="text-xs text-neutral-600 font-sans mb-6">
+          Your payment gateway session is currently processing or awaiting webhook confirmation. If you completed payment, please wait a moment or check your orders dashboard.
+        </p>
+        <Link
+          href="/orders"
+          className="inline-block bg-black text-white hover:bg-neutral-800 px-6 py-3 text-xs uppercase font-bold tracking-widest"
+        >
+          Check Orders Status
+        </Link>
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'invalid') {
+    return (
+      <div className="max-w-[1400px] mx-auto px-4 py-24 text-center font-mono max-w-xl bg-white border border-black p-10">
+        <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+        <h1 className="text-xl font-bold uppercase mb-2">Invalid or Unverified Order</h1>
+        <p className="text-xs text-neutral-600 font-sans mb-6">
+          We could not verify a successful payment for this session. Please contact support or try placing your order again.
+        </p>
+        <Link
+          href="/products"
+          className="inline-block bg-black text-white hover:bg-neutral-800 px-6 py-3 text-xs uppercase font-bold tracking-widest"
+        >
+          Return to Catalog
+        </Link>
+      </div>
+    );
+  }
+
   const orderSchema = {
     '@context': 'https://schema.org',
     '@type': 'Order',
     orderNumber: safeOrderId,
-    orderStatus: 'https://schema.org/OrderProcessing',
+    orderStatus: 'https://schema.org/OrderDelivered',
     seller: {
       '@type': 'Organization',
       name: 'HIDEWOOD Leather',
-      url: 'https://hidewood.example.com',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Kanpur',
-        addressRegion: 'Uttar Pradesh',
-        addressCountry: 'India',
-      },
+      url: 'https://hidewood.in',
     },
     orderDate: new Date().toISOString(),
-    deliveryLeadTime: {
-      '@type': 'QuantitativeValue',
-      minValue: 2,
-      maxValue: 4,
-      unitCode: 'DAY',
-    },
   };
 
   return (
@@ -196,7 +255,6 @@ function OrderSuccessContent() {
       />
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12">
-        {/* Top Navigation Row */}
         <div className="flex items-center justify-between border-b border-black/10 pb-4 mb-8 sm:mb-12 font-mono text-[10px] sm:text-xs uppercase print:hidden">
           <Link
             href="/products"
@@ -221,14 +279,12 @@ function OrderSuccessContent() {
           </div>
         </div>
 
-        {/* Hero Success Monolith */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="border-2 border-black bg-white p-6 sm:p-12 lg:p-16 mb-12 sm:mb-16 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
         >
-          {/* Watermark Seal Background */}
           <div className="absolute right-4 -bottom-10 select-none pointer-events-none opacity-[0.03] text-black font-black font-mono text-[160px] sm:text-[240px] leading-none">
             HW
           </div>
@@ -247,7 +303,6 @@ function OrderSuccessContent() {
               </p>
             </div>
 
-            {/* Hand-Stamped Seal Badge */}
             <div className="border border-black p-4 bg-[#F8F8F6] text-center font-mono shrink-0 self-start sm:self-auto">
               <span className="text-[9px] uppercase text-neutral-400 block mb-0.5">
                 WORKSHOP STATUS
@@ -261,10 +316,8 @@ function OrderSuccessContent() {
             </div>
           </div>
 
-          {/* Interactive 3D Hologram Certificate */}
           <Certificate3DCard orderId={safeOrderId} dateIssued={dateIssued} />
 
-          {/* Certificate Specifications Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 font-mono text-xs uppercase my-8">
             <div className="p-3.5 border border-black/10 bg-[#FAFAFA]">
               <span className="text-[10px] text-neutral-400 block mb-1">DATE OF ORDER</span>
@@ -287,7 +340,6 @@ function OrderSuccessContent() {
             </div>
           </div>
 
-          {/* Atelier Seal Statement */}
           <div className="border-t border-black/10 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-[11px] text-neutral-500">
             <p className="max-w-xl leading-relaxed font-sans">
               This certificate confirms that your piece is handcrafted from 100% genuine full-grain leather directly at our Kanpur workshop. It contains zero synthetic cardboard fillers and will naturally darken and patina over time.
@@ -355,34 +407,6 @@ function OrderSuccessContent() {
           </div>
         </section>
 
-        {/* Leather Care & Maintenance Tips */}
-        <section className="border border-black bg-white p-6 sm:p-10 mb-14 sm:mb-20 font-mono text-xs">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-4 h-4 text-black" />
-            <h3 className="font-bold text-sm uppercase text-black">
-              EASY LEATHER CARE GUIDE
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[11px] text-neutral-600 leading-relaxed font-sans">
-            <div>
-              <strong className="text-black block mb-1 uppercase font-mono">01 // INITIAL WEAR</strong>
-              Your 100% thick real leather will feel firm initially. It will mold to your waist and body naturally within 4 to 7 days of daily wear.
-            </div>
-
-            <div>
-              <strong className="text-black block mb-1 uppercase font-mono">02 // WATER ACCIDENTS</strong>
-              If wet due to rain, simply wipe off with a soft dry cloth and let it dry naturally at room temperature. Avoid direct artificial heaters.
-            </div>
-
-            <div>
-              <strong className="text-black block mb-1 uppercase font-mono">03 // CLEANING &amp; SHINE</strong>
-              Every few months, apply a small dab of natural leather wax or conditioner to maintain softness and deep natural gloss.
-            </div>
-          </div>
-        </section>
-
-        {/* Bottom CTA Row */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-black/10 pt-8 print:hidden">
           <Link
             href="/orders"

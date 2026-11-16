@@ -24,7 +24,21 @@ const geistMono = Geist_Mono({
   display: 'swap',
 });
 
-const BRAND_LETTERS = ['H', 'I', 'D', 'E', 'W', 'O', 'O', 'D'];
+// Non-linear staggered entry & exit timings matching the reference video rhythm
+const SHUTTER_LETTERS = [
+  { char: 'H', enterDelay: 0.14, exitDelay: 0.14 },
+  { char: 'I', enterDelay: 0.26, exitDelay: 0.04 },
+  { char: 'D', enterDelay: 0.18, exitDelay: 0.18 },
+  { char: 'E', enterDelay: 0.30, exitDelay: 0.08 },
+  { char: 'W', enterDelay: 0.16, exitDelay: 0.12 },
+  { char: 'O', enterDelay: 0.24, exitDelay: 0.02 },
+  { char: 'O', enterDelay: 0.20, exitDelay: 0.16 },
+  { char: 'D', enterDelay: 0.28, exitDelay: 0.06 },
+];
+
+const CURTAIN_EASE: [number, number, number, number] = [0.76, 0, 0.24, 1];
+const LETTER_ENTER_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const LETTER_EXIT_EASE: [number, number, number, number] = [0.7, 0, 0.3, 1];
 
 function ShutterCurtain() {
   const { isNavigating } = useAtelierTransition();
@@ -33,37 +47,90 @@ function ShutterCurtain() {
     <AnimatePresence>
       {isNavigating && (
         <motion.div
+          role="status"
+          aria-live="polite"
+          aria-label="Navigating page"
           initial={{ y: '100%' }}
-          animate={{ y: '0%' }}
-          exit={{ y: '-100%' }}
-          transition={{ duration: 0.45, ease: [0.77, 0, 0.175, 1] }}
-          className="fixed inset-0 z-50 bg-[#090909] flex flex-col items-center justify-center pointer-events-none select-none"
+          animate={{
+            y: '0%',
+            transition: { duration: 0.55, ease: CURTAIN_EASE },
+          }}
+          exit={{
+            y: '-100%',
+            transition: { duration: 0.55, delay: 0.18, ease: CURTAIN_EASE },
+          }}
+          className="fixed inset-0 z-[90] bg-[#090909] flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden will-change-transform"
         >
-          <div className="flex items-center overflow-hidden">
-            {BRAND_LETTERS.map((char, index) => (
-              <div key={index} className="overflow-hidden inline-block px-[2px]">
+          <div className="flex items-center justify-center">
+            {SHUTTER_LETTERS.map((item, index) => (
+              <div
+                key={index}
+                className="overflow-hidden inline-block py-1 px-[1px] sm:px-[2px]"
+              >
                 <motion.span
-                  initial={{ y: '120%', opacity: 0 }}
-                  animate={{ y: '0%', opacity: 1 }}
-                  exit={{ y: '-120%', opacity: 0 }}
-                  transition={{
-                    duration: 0.4,
-                    delay: 0.05 + index * 0.03,
-                    ease: [0.16, 1, 0.3, 1],
+                  initial={{ y: '115%' }}
+                  animate={{
+                    y: '0%',
+                    transition: {
+                      duration: 0.48,
+                      delay: item.enterDelay,
+                      ease: LETTER_ENTER_EASE,
+                    },
                   }}
-                  className="inline-block text-white text-4xl sm:text-7xl font-black uppercase tracking-tight font-sans leading-none"
+                  exit={{
+                    y: '-115%',
+                    transition: {
+                      duration: 0.36,
+                      delay: item.exitDelay,
+                      ease: LETTER_EXIT_EASE,
+                    },
+                  }}
+                  className="inline-block text-white text-4xl xs:text-5xl sm:text-7xl md:text-8xl font-black uppercase tracking-tighter font-sans leading-none will-change-transform"
                 >
-                  {char}
+                  {item.char}
                 </motion.span>
               </div>
             ))}
+
+            {/* Trade Mark (TM) Symbol */}
+            <div className="overflow-hidden inline-block self-start mt-1 ml-0.5 sm:ml-1">
+              <motion.span
+                initial={{ y: '115%' }}
+                animate={{
+                  y: '0%',
+                  transition: {
+                    duration: 0.42,
+                    delay: 0.32,
+                    ease: LETTER_ENTER_EASE,
+                  },
+                }}
+                exit={{
+                  y: '-115%',
+                  transition: {
+                    duration: 0.3,
+                    delay: 0.10,
+                    ease: LETTER_EXIT_EASE,
+                  },
+                }}
+                className="inline-block text-white text-[10px] sm:text-xs md:text-sm font-sans font-bold"
+              >
+                &trade;
+              </motion.span>
+            </div>
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 0.6, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25, delay: 0.28 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{
+              opacity: 0.55,
+              y: 0,
+              transition: { duration: 0.35, delay: 0.32, ease: LETTER_ENTER_EASE },
+            }}
+            exit={{
+              opacity: 0,
+              y: -8,
+              transition: { duration: 0.22, ease: LETTER_EXIT_EASE },
+            }}
             className="mt-3 font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.3em] text-neutral-400"
           >
             KANPUR ATELIER &bull; ARCHIVAL DISPATCH
@@ -197,7 +264,6 @@ export default function RootLayout({
       <body className="min-h-full m-0 p-0 overflow-x-hidden bg-[#F8F8F6] flex flex-col justify-between selection:bg-black selection:text-white">
         <TransitionProvider>
           <GlobalLinkInterceptor>
-            
             {/* 1. KINETIC SHUTTER CURTAIN */}
             <ShutterCurtain />
 
@@ -232,7 +298,6 @@ export default function RootLayout({
 
             {/* 5. GLOBAL FOOTER */}
             <Footer />
-
           </GlobalLinkInterceptor>
         </TransitionProvider>
       </body>

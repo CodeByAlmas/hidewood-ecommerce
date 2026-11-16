@@ -5,16 +5,30 @@ import { prisma } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 function getStripeClient() {
-  const apiKey = process.env.STRIPE_SECRET_KEY || 'sk_test_build_placeholder';
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey) {
+    throw new Error('CRITICAL: STRIPE_SECRET_KEY is missing in environment variables.');
+  }
   return new Stripe(apiKey, {
     apiVersion: '2023-10-16' as any,
   });
 }
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: Request) {
-  const stripe = getStripeClient();
+  if (!webhookSecret) {
+    console.error('CRITICAL: STRIPE_WEBHOOK_SECRET is missing.');
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+  }
+
+  let stripe: Stripe;
+  try {
+    stripe = getStripeClient();
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+
   const body = await req.text();
   const signature = req.headers.get('stripe-signature') || '';
 
@@ -27,53 +41,67 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
   }
 
-  // 1. Success Event: Payment complete ho gayi
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const orderId = session.metadata?.orderId;
+  try {
+    // 1. Success Event: Payment complete ho gayi
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const orderId = session.metadata?.orderId;
 
-    if (orderId) {
-      try {
-        await (prisma.order.update as any)({
+      if (orderId) {
+        // Idempotency check: agar order pehle hi PAID hai toh dubara process mat karo
+        const existingOrder = await prisma.order.findUnique({
           where: { id: orderId },
-          data: {
-            status: 'PAID',
-            ...(session.payment_intent ? { transactionId: session.payment_intent as string } : {}),
-          },
+          select: { status: true, totalAmount: true },
         });
-      } catch (err) {
-        console.error('Failed to update order to PAID:', err);
-      }
-    }
-  }
 
-  // 2. Failed Event: Payment reject ho gayi
-  if (event.type === 'payment_intent.payment_failed') {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent;
-    const orderId = paymentIntent.metadata?.orderId;
+        if (existingOrder && existingOrder.status !== 'PAID') {
+          // Verify amount match (Stripe amount is in paise)
+          const expectedAmountInPaise = Math.round(existingOrder.totalAmount * 100);
+          if (session.amount_total && session.amount_total !== expectedAmountInPaise) {
+            console.error(`Amount mismatch for order ${orderId}: Expected ${expectedAmountInPaise}, got ${session.amount_total}`);
+            return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
+          }
 
-    if (orderId) {
-      try {
-        await (prisma.order.update as any)({
-          where: { id: orderId },
-          data: {
-            status: 'FAILED',
-          },
-        });
-      } catch {
-        try {
-          await (prisma.order.update as any)({
+          await prisma.order.update({
             where: { id: orderId },
             data: {
-              status: 'CANCELLED',
+              status: 'PAID',
+              paymentId: (session.payment_intent as string) || session.id,
             },
           });
-        } catch (dbErr) {
-          console.error('Failed to update order on payment failure:', dbErr);
         }
       }
     }
-  }
 
-  return NextResponse.json({ received: true });
+    // 2. Failed / Expired Event
+    if (
+      event.type === 'payment_intent.payment_failed' ||
+      event.type === 'checkout.session.expired'
+    ) {
+      const obj = event.data.object as any;
+      const orderId = obj.metadata?.orderId;
+
+      if (orderId) {
+        const existingOrder = await prisma.order.findUnique({
+          where: { id: orderId },
+          select: { status: true },
+        });
+
+        if (existingOrder && existingOrder.status === 'PENDING') {
+          await prisma.order.update({
+            where: { id: orderId },
+            data: {
+              status: event.type === 'checkout.session.expired' ? 'CANCELLED' : 'FAILED',
+            },
+          });
+        }
+      }
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (dbErr: any) {
+    console.error('Webhook database handling error:', dbErr);
+    // Return 500 so Stripe retries later if DB was temporarily down
+    return NextResponse.json({ error: 'Database sync failure' }, { status: 500 });
+  }
 }

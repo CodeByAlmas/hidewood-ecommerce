@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Heart, Plus, Check, Bell } from 'lucide-react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { Heart, Plus, Check, Bell, Loader2, Sparkles } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import { useFavoriteStore } from '@/store/useFavoriteStore';
 
@@ -11,12 +11,15 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  badge: string;
+  badge?: string;
   category: string;
   description: string;
   spec: string;
   inStock: boolean;
   images: string[];
+  coverPrimary?: string;
+  coverHover?: string;
+  isNewArrival?: boolean;
 }
 
 interface ProductGridProps {
@@ -24,149 +27,6 @@ interface ProductGridProps {
   onSelectProduct: (product: Product) => void;
   isReady?: boolean;
 }
-
-const CATALOG_ITEMS: Product[] = [
-  {
-    id: 'hw-01',
-    name: 'The Bridle Edition',
-    price: 5499,
-    badge: 'Best Seller',
-    category: 'Full-Grain 38mm',
-    description: 'Cut from 100% pure thick leather. Treated with natural wax for a lifetime of daily wear without cracking.',
-    spec: '4.2mm Real Hide • Solid Brass Buckle',
-    inStock: true,
-    images: [
-      '/belt-macro.png',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-02',
-    name: 'The Onyx Dress',
-    price: 6299,
-    badge: 'Formal Classic',
-    category: 'Dress 32mm',
-    description: 'Sleek formal belt with smooth hand-painted black edges tailored for dress trousers and bespoke suits.',
-    spec: 'Italian Calfskin • Matte Steel Buckle',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-03',
-    name: 'Heritage Raw Saddle',
-    price: 6999,
-    badge: 'Sold Out',
-    category: 'Heavy Jeans 40mm',
-    description: 'Natural uncolored leather belt that gets richer and darker as you wear it every single day.',
-    spec: 'Extra Heavy Leather • Hand-Stitched',
-    inStock: false,
-    images: [
-      'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-04',
-    name: 'Bespoke Folio Wallet',
-    price: 4499,
-    badge: 'New Arrival',
-    category: 'Wallets & Carry',
-    description: 'Slim bifold leather wallet holding 8 cards and flat cash without bulging in your pocket.',
-    spec: 'Smooth Grain Leather • Hand-Finished',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-05',
-    name: 'Archival Field Backpack',
-    price: 18499,
-    badge: 'Travel Gear',
-    category: 'Structural Bags',
-    description: 'Heavyweight all-leather travel pack with reinforced solid copper rivets and padded shoulder straps.',
-    spec: '28L Laptop Capacity • Solid Brass Locks',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-06',
-    name: 'Service Derby Shoes',
-    price: 14299,
-    badge: 'Hand-Crafted',
-    category: 'Leather Footwear',
-    description: 'Classic lace-up formal derby shoes made with replaceable double leather soles for decade-long wear.',
-    spec: 'Goodyear Welt Construction • Calf Leather',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-07',
-    name: 'Tea-Core Steer Moto Jacket',
-    price: 32999,
-    badge: 'Pure Leather Jacket',
-    category: 'Leather Jackets',
-    description: 'Heavyweight genuine motorcycle rider leather jacket with heavy duty brass metal zippers.',
-    spec: '1.4mm Heavy Cowhide • Satin Inner Lining',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1200&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-08',
-    name: 'Monolithic Field Duffle 45L',
-    price: 24999,
-    badge: 'Weekend Duffle',
-    category: 'Travel Bags',
-    description: 'Large weekend duffle bag cut from full-grain leather. Designed to handle airline travel effortlessly.',
-    spec: '45L Cabin Approved • Copper Rivets',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1200&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-09',
-    name: 'MagSafe Leather Case',
-    price: 3499,
-    badge: 'Phone Cases',
-    category: 'Phone Accessories',
-    description: 'Real leather phone case with built-in MagSafe magnets that develops a dark, glossy patina with daily touch.',
-    spec: 'Soft Microfiber Inside • Real Leather Shell',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-10',
-    name: 'Raw Harness Slide',
-    price: 7999,
-    badge: 'Summer Sandals',
-    category: 'Footwear',
-    description: 'Comfortable contoured leather sandals with thick solid brass buckles hand-made on natural soles.',
-    spec: 'All-Leather Footbed • Solid Brass Buckle',
-    inStock: false,
-    images: [
-      'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1000&auto=format&fit=crop'
-    ]
-  }
-];
 
 function ProductItem({
   prod,
@@ -178,6 +38,9 @@ function ProductItem({
   onSelect: (product: Product) => void;
 }) {
   const router = useRouter();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef, { once: true, amount: 0.05 });
+
   const [isHovered, setIsHovered] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
@@ -187,7 +50,9 @@ function ProductItem({
   const { isFavorite, addFavorite, removeFavorite } = useFavoriteStore();
   const isFav = isFavorite(prod.id);
 
-  const hasSecondary = prod.images && prod.images.length > 1;
+  const primaryImg = prod.coverPrimary || prod.images?.[0] || '/belt-macro.png';
+  const hoverImg = prod.coverHover || prod.images?.[1] || primaryImg;
+  const hasSecondary = hoverImg !== primaryImg;
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -199,7 +64,7 @@ function ProductItem({
       price: prod.price,
       size: '34',
       quantity: 1,
-      image: prod.images[0],
+      image: primaryImg,
       category: prod.category,
     });
 
@@ -217,9 +82,9 @@ function ProductItem({
         id: prod.id,
         name: prod.name,
         price: prod.price,
-        badge: prod.badge,
+        badge: prod.badge || (prod.isNewArrival ? 'New Drop' : ''),
         category: prod.category,
-        image: prod.images[0],
+        image: primaryImg,
         spec: prod.spec,
       });
     }
@@ -231,29 +96,37 @@ function ProductItem({
   };
 
   return (
-    <div
+    <article
+      ref={cardRef}
       onClick={() => onSelect(prod)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group flex flex-col justify-between cursor-pointer w-full select-none"
     >
-      <div className={`relative ${aspect} w-full overflow-hidden bg-neutral-200/50 mb-2.5`}>
-        {/* Primary Image */}
-        <img
-          src={prod.images[0]}
-          alt={prod.name}
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-transform duration-500 group-hover:scale-102"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1000&auto=format&fit=crop';
-          }}
-        />
+      {/* White Backdrop Before Scroll Reveal */}
+      <div className={`relative ${aspect} w-full overflow-hidden bg-white mb-2.5`}>
+        {/* Primary Cover Image: Left-to-Right Wipe on Scroll */}
+        <motion.div
+          initial={{ x: '-101%' }}
+          animate={isInView ? { x: '0%' } : { x: '-101%' }}
+          transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 w-full h-full will-change-transform"
+        >
+          <img
+            src={primaryImg}
+            alt={prod.name}
+            loading="lazy"
+            className="w-full h-full object-cover pointer-events-none transition-transform duration-500 ease-[0.16,1,0.3,1] group-hover:scale-102"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/belt-macro.png';
+            }}
+          />
+        </motion.div>
 
-        {/* Secondary Image Flip */}
+        {/* Secondary Image Flip on Hover */}
         {hasSecondary && (
           <motion.img
-            src={prod.images[1]}
+            src={hoverImg}
             alt={`${prod.name} secondary angle`}
             initial={false}
             animate={{
@@ -268,19 +141,27 @@ function ProductItem({
           />
         )}
 
-        {/* Top Badges (Category & Stock) */}
+        {/* Top Badges */}
         <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5 pointer-events-none">
-          <span className="bg-black/80 backdrop-blur-xs text-white text-[9px] font-mono uppercase px-2 py-0.5 font-bold">
-            {prod.badge}
-          </span>
+          {prod.badge && (
+            <span className="bg-black/85 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-mono uppercase px-2 py-0.5 font-bold tracking-wider">
+              {prod.badge}
+            </span>
+          )}
+          {prod.isNewArrival && !prod.badge && (
+            <span className="bg-purple-950/90 text-purple-200 text-[8px] sm:text-[9px] font-mono uppercase px-2 py-0.5 font-bold tracking-wider flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+              <span>New Drop</span>
+            </span>
+          )}
           {!prod.inStock && (
-            <span className="bg-red-600 text-white text-[9px] font-mono uppercase px-2 py-0.5 font-bold">
+            <span className="bg-red-600 text-white text-[8px] sm:text-[9px] font-mono uppercase px-2 py-0.5 font-bold tracking-wider">
               Sold Out
             </span>
           )}
         </div>
 
-        {/* Wishlist Heart Icon (Top Right) */}
+        {/* Wishlist Heart Icon */}
         <button
           type="button"
           onClick={handleToggleFavorite}
@@ -294,44 +175,52 @@ function ProductItem({
           />
         </button>
 
-        {/* Quick Add To Bag / Notify Button Bar */}
-        {prod.inStock ? (
-          <button
-            type="button"
-            onClick={handleQuickAdd}
-            className="absolute bottom-2.5 inset-x-2.5 z-20 bg-black/90 hover:bg-black text-white py-2 px-3 text-[10px] sm:text-xs font-mono uppercase tracking-wider font-bold transition-all duration-300 flex items-center justify-center gap-1.5 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 active:scale-98 shadow-md cursor-pointer"
-          >
-            {justAdded ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Added To Bag</span>
-              </>
+        {/* Action Button Bar */}
+        <div className="absolute bottom-2.5 inset-x-2.5 z-20">
+          <AnimatePresence>
+            {prod.inStock ? (
+              <button
+                type="button"
+                onClick={handleQuickAdd}
+                className="w-full bg-black/90 hover:bg-black text-white py-2 px-3 text-[10px] sm:text-xs font-mono uppercase tracking-wider font-bold transition-all duration-300 flex items-center justify-center gap-1.5 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 active:scale-98 shadow-md cursor-pointer"
+              >
+                {justAdded ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Added To Bag</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Quick Add &bull; 34&quot;</span>
+                  </>
+                )}
+              </button>
             ) : (
-              <>
-                <Plus className="w-3.5 h-3.5" />
-                <span>Quick Add &bull; 34&quot;</span>
-              </>
+              <button
+                type="button"
+                onClick={handleNotifyMe}
+                className="w-full bg-black/90 hover:bg-black text-white py-2 px-3 text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 active:scale-98 shadow-md cursor-pointer"
+              >
+                <Bell className="w-3.5 h-3.5 text-red-500" />
+                <span>NOTIFY ME WHEN BACK</span>
+              </button>
             )}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleNotifyMe}
-            className="absolute bottom-2.5 inset-x-2.5 z-20 bg-black/90 hover:bg-black text-white py-2 px-3 text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-bold text-center transition-all duration-300 flex items-center justify-center gap-1.5 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 active:scale-98 shadow-md cursor-pointer"
-          >
-            <Bell className="w-3.5 h-3.5 text-red-500" />
-            <span>NOTIFY ME WHEN BACK</span>
-          </button>
-        )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Product Title & Pricing */}
+      {/* Title & Pricing */}
       <div className="flex items-baseline justify-between gap-2 font-mono text-[11px] sm:text-xs">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0" />
-          <span className="font-bold text-black uppercase tracking-tight truncate group-hover:underline">
+          <span
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              prod.inStock ? 'bg-red-600' : 'bg-neutral-400'
+            }`}
+          />
+          <h3 className="font-bold text-black uppercase tracking-tight truncate group-hover:underline">
             {prod.name}
-          </span>
+          </h3>
         </div>
 
         <div className="text-right shrink-0">
@@ -341,35 +230,72 @@ function ProductItem({
         </div>
       </div>
       <p className="text-[10px] text-neutral-500 font-sans truncate mt-0.5">
-        {prod.spec}
+        {prod.spec || 'Pure Leather Piece'}
       </p>
-    </div>
-  );
-}
-
-function RevealRow({
-  children,
-  className = '',
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -40 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, amount: 0.08 }}
-      transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
+    </article>
   );
 }
 
 export default function ProductGrid({
+  products: initialProducts,
   onSelectProduct,
 }: ProductGridProps) {
+  const [liveCatalog, setLiveCatalog] = useState<Product[]>(initialProducts || []);
+  const [isLoading, setIsLoading] = useState(!initialProducts || initialProducts.length === 0);
+
+  useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      setLiveCatalog(initialProducts);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchDatabaseCatalog = async () => {
+      try {
+        const res = await fetch('/api/products', { cache: 'no-store' });
+        const data = await res.json();
+        if (data.products && Array.isArray(data.products)) {
+          const mapped: Product[] = data.products.map((p: any) => ({
+            id: p.slug || p.id,
+            name: p.name,
+            price: p.price,
+            badge: p.isNewArrival ? 'New Drop' : (p.featuredSale ? 'Flash Sale' : ''),
+            category: p.subCategory || p.category,
+            description: p.description || '',
+            spec: p.spec || 'Pure Leather',
+            inStock: p.inStock,
+            coverPrimary: p.coverPrimary,
+            coverHover: p.coverHover,
+            isNewArrival: p.isNewArrival,
+            images: [
+              p.coverPrimary || p.images?.[0] || '/belt-macro.png',
+              p.coverHover || p.images?.[1] || p.coverPrimary || '/belt-macro.png',
+            ],
+          }));
+          setLiveCatalog(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to fetch home catalog in ProductGrid:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDatabaseCatalog();
+  }, [initialProducts]);
+
+  const rowChunks = useMemo(() => {
+    const chunks: Product[][] = [];
+    let i = 0;
+    while (i < liveCatalog.length) {
+      const patternIndex = chunks.length % 3;
+      const size = patternIndex === 0 ? 4 : 3;
+      chunks.push(liveCatalog.slice(i, i + size));
+      i += size;
+    }
+    return chunks;
+  }, [liveCatalog]);
+
   return (
     <section
       id="archive"
@@ -381,7 +307,7 @@ export default function ProductGrid({
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col md:flex-row md:items-baseline justify-between gap-2 pb-3 mb-6 sm:mb-8 font-sans"
+          className="flex flex-col md:flex-row md:items-baseline justify-between gap-2 pb-3 mb-6 sm:mb-8 font-sans border-b border-black/10"
         >
           <div className="flex items-center gap-2 sm:gap-2.5">
             <span className="w-2 h-2 rounded-full bg-black animate-pulse shrink-0" />
@@ -394,67 +320,110 @@ export default function ProductGrid({
           </p>
         </motion.div>
 
-        <div className="flex flex-col gap-10 sm:gap-14 w-full">
-          {/* Row 1: 4 Products */}
-          <RevealRow className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full">
-            {CATALOG_ITEMS.slice(0, 4).map((item) => (
-              <ProductItem
-                key={item.id}
-                prod={item}
-                aspect="aspect-[3/4]"
-                onSelect={onSelectProduct}
-              />
-            ))}
-          </RevealRow>
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center justify-center font-mono text-xs text-neutral-400">
+            <Loader2 className="w-6 h-6 animate-spin text-red-600 mb-2" />
+            <span>Loading Atelier Catalog...</span>
+          </div>
+        ) : liveCatalog.length === 0 ? (
+          <div className="p-12 border border-dashed border-black/15 bg-white/60 text-center font-mono my-4">
+            <p className="text-xs uppercase text-neutral-500 font-bold">
+              Catalog updating. Products added via admin console will appear here automatically.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-10 sm:gap-14 w-full">
+            {rowChunks.map((chunk, chunkIdx) => {
+              const pattern = chunkIdx % 3;
 
-          {/* Row 2: 2 Compact Left + 1 Feature Right */}
-          <RevealRow className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start">
-            <div className="md:col-span-5 grid grid-cols-2 gap-4 sm:gap-6">
-              <ProductItem
-                prod={CATALOG_ITEMS[4]}
-                aspect="aspect-[3/4]"
-                onSelect={onSelectProduct}
-              />
-              <ProductItem
-                prod={CATALOG_ITEMS[5]}
-                aspect="aspect-[3/4]"
-                onSelect={onSelectProduct}
-              />
-            </div>
+              if (pattern === 0 || chunk.length === 4) {
+                return (
+                  <div
+                    key={chunkIdx}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full"
+                  >
+                    {chunk.map((item) => (
+                      <ProductItem
+                        key={item.id}
+                        prod={item}
+                        aspect="aspect-[3/4]"
+                        onSelect={onSelectProduct}
+                      />
+                    ))}
+                  </div>
+                );
+              }
 
-            <div className="md:col-span-7">
-              <ProductItem
-                prod={CATALOG_ITEMS[6]}
-                aspect="aspect-[16/11]"
-                onSelect={onSelectProduct}
-              />
-            </div>
-          </RevealRow>
+              if (pattern === 1) {
+                const leftTwo = chunk.slice(0, 2);
+                const rightBig = chunk[2];
 
-          {/* Row 3: 1 Feature Left + 2 Compact Right */}
-          <RevealRow className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start">
-            <div className="md:col-span-7">
-              <ProductItem
-                prod={CATALOG_ITEMS[7]}
-                aspect="aspect-[16/11]"
-                onSelect={onSelectProduct}
-              />
-            </div>
+                return (
+                  <div
+                    key={chunkIdx}
+                    className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start"
+                  >
+                    <div className="md:col-span-5 grid grid-cols-2 gap-4 sm:gap-6">
+                      {leftTwo.map((item) => (
+                        <ProductItem
+                          key={item.id}
+                          prod={item}
+                          aspect="aspect-[3/4]"
+                          onSelect={onSelectProduct}
+                        />
+                      ))}
+                    </div>
 
-            <div className="md:col-span-5 grid grid-cols-2 gap-4 sm:gap-6">
-              <ProductItem
-                prod={CATALOG_ITEMS[8]}
-                aspect="aspect-[3/4]"
-                onSelect={onSelectProduct}
-              />
-              <ProductItem
-                prod={CATALOG_ITEMS[9]}
-                aspect="aspect-[3/4]"
-                onSelect={onSelectProduct}
-              />
-            </div>
-          </RevealRow>
-        </div>
+                    {rightBig && (
+                      <div className="md:col-span-7">
+                        <ProductItem
+                          prod={rightBig}
+                          aspect="aspect-[16/11]"
+                          onSelect={onSelectProduct}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              if (pattern === 2) {
+                const leftBig = chunk[0];
+                const rightTwo = chunk.slice(1, 3);
+
+                return (
+                  <div
+                    key={chunkIdx}
+                    className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start"
+                  >
+                    {leftBig && (
+                      <div className="md:col-span-7">
+                        <ProductItem
+                          prod={leftBig}
+                          aspect="aspect-[16/11]"
+                          onSelect={onSelectProduct}
+                        />
+                      </div>
+                    )}
+
+                    <div className="md:col-span-5 grid grid-cols-2 gap-4 sm:gap-6">
+                      {rightTwo.map((item) => (
+                        <ProductItem
+                          key={item.id}
+                          prod={item}
+                          aspect="aspect-[3/4]"
+                          onSelect={onSelectProduct}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              return null;
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

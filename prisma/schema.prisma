@@ -7,44 +7,32 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// ==========================================
-// ENUMS (Original + Role)
-// ==========================================
-enum Category {
-  BELTS
-  WALLETS
-  BAGS
-  ACCESSORIES
-}
-
-enum OrderStatus {
-  PENDING
-  PAID
-  FULFILLED
-  CANCELLED
-}
-
 enum Role {
   PATRON
   ATELIER_ADMIN
 }
 
-// ==========================================
-// 1. PATRON & IDENTITY (Added for Login/OAuth)
-// ==========================================
+enum OrderStatus {
+  PENDING
+  PAID
+  CRAFTING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+// 1. PATRON & CRM IDENTITY
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String         @id @default(cuid())
+  email         String         @unique
   name          String?
   phone         String?
-  passwordHash  String?   // For Master Key sign-in
+  passwordHash  String?
   image         String?
-  role          Role      @default(PATRON)
-  
-  // Archival Keycard Security
-  patronPassKey String?   @unique // e.g. "HW-P2-8492"
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  role          Role           @default(PATRON)
+  patronPassKey String?        @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   accounts      Account[]
   sessions      Session[]
@@ -55,18 +43,18 @@ model User {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -84,52 +72,54 @@ model Session {
   @@index([userId])
 }
 
-// ==========================================
-// 2. PRODUCTS & CATALOGUE (Your Existing Model 100% Intact)
-// ==========================================
+// 2. LIVE PRODUCTS & MEDIA
 model Product {
-  id          String           @id @default(cuid())
-  slug        String           @unique
-  name        String
-  description String
-  price       Int              // Smallest currency unit (cents/paise)
-  category    Category         @default(BELTS)
-  leatherTone String           // 'Tuscan Tan', 'Obsidian Black', 'Oxblood'
-  images      String[]
-  inStock     Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  variants    ProductVariant[]
-  orderItems  OrderItem[]
+  id           String      @id @default(cuid())
+  slug         String      @unique
+  name         String
+  category     String
+  subCategory  String?
+  mrp          Float?
+  price        Float
+  inStock      Boolean     @default(true)
+  featuredSale Boolean     @default(false)
+  isNewArrival Boolean     @default(true)
+  coverPrimary String?
+  coverHover   String?
+  images       String[]
+  sizes        String[]
+  hasColors    Boolean     @default(false)
+  colors       Json?
+  description  String      @db.Text
+  spec         String      @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  orderItems   OrderItem[]
+
+  @@index([category])
+  @@index([slug])
 }
 
-model ProductVariant {
-  id          String   @id @default(cuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  size        String   // e.g., '32', '34', '36', '38', '40'
-  width       String   // e.g., '32mm Dress', '38mm Casual Heritage'
-  buckleType  String   // 'Antique Brass', 'Matte Gunmetal', 'Brushed Nickel'
-  inventory   Int      @default(15)
-}
-
-// ==========================================
-// 3. ORDERS (Your Existing Model + User Link)
-// ==========================================
+// 3. SECURE ORDERS & CRM LEDGER
 model Order {
   id             String      @id @default(cuid())
   userId         String?
-  user           User?       @relation(fields: [userId], references: [id])
+  user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerName   String?
   customerEmail  String
   customerPhone  String?
   shippingAddr   Json
-  totalAmount    Int
+  totalAmount    Float
   currency       String      @default("INR")
   status         OrderStatus @default(PENDING)
   paymentId      String?     @unique
-  paymentGateway String      // 'STRIPE' | 'RAZORPAY'
+  paymentGateway String      @default("STRIPE")
+  courier        String?     @default("BlueDart Express Air")
+  trackingNumber String?
   items          OrderItem[]
   createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   @@index([customerEmail])
   @@index([userId])
@@ -139,19 +129,18 @@ model OrderItem {
   id          String   @id @default(cuid())
   orderId     String
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  variantInfo Json     // { size: '34', width: '38mm', buckle: 'Brass' }
-  quantity    Int
-  unitPrice   Int
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name        String
+  size        String?
+  color       String?
+  price       Float
+  quantity    Int      @default(1)
+  image       String?
 
   @@index([orderId])
-  @@index([productId])
 }
 
-// ==========================================
-// 4. CUSTOM INQUIRIES (Your Existing Model 100% Intact)
-// ==========================================
 model CustomInquiry {
   id        String   @id @default(cuid())
   services  String[]
@@ -161,9 +150,6 @@ model CustomInquiry {
   createdAt DateTime @default(now())
 }
 
-// ==========================================
-// 5. PHASE 02 DROP RESERVATION (Added for /reservation)
-// ==========================================
 model Reservation {
   id          String   @id @default(cuid())
   userId      String?
@@ -171,10 +157,20 @@ model Reservation {
   patronName  String
   email       String
   phone       String
-  passKey     String   @unique // e.g. "HW-P2-4910"
-  silhouette  String   // e.g. "Tuscan Moto Rider"
+  passKey     String   @unique
+  silhouette  String
   createdAt   DateTime @default(now())
 
   @@index([email])
   @@index([passKey])
+}
+
+model CategoryTaxonomy {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  subCategories String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([name])
 }

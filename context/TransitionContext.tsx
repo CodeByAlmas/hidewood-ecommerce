@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useTransition } from 'react';
+import React, { createContext, useContext, useState, useTransition, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface TransitionContextType {
@@ -20,27 +20,32 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
   const [, startTransition] = useTransition();
+  const lockRef = useRef(false);
 
   const navigateTo = (href: string) => {
-    // Agar same page par ho toh trigger mat karo
-    if (href === pathname || href === `/#` || href.startsWith('#')) {
+    if (!href || href === pathname || href === '/#' || href.startsWith('#') || lockRef.current) {
       return;
     }
 
-    // 1. Pehle parda neeche se upar aakar screen cover karega
+    lockRef.current = true;
+
+    // 1. Curtain rises smoothly from bottom & staggered letters enter
     setIsNavigating(true);
 
-    // 2. 450ms wait karega jab tak screen 100% black cover na ho jaye
+    // 2. Route changes cleanly while screen is fully covered (560ms)
     setTimeout(() => {
       startTransition(() => {
         router.push(href);
       });
 
-      // 3. Page change hone ke baad parda upar slide hokar gayab ho jayega
+      // 3. Hold briefly for brand readability, then letters exit upward & curtain slides up
       setTimeout(() => {
         setIsNavigating(false);
-      }, 550);
-    }, 450);
+        setTimeout(() => {
+          lockRef.current = false;
+        }, 700);
+      }, 650);
+    }, 560);
   };
 
   return (

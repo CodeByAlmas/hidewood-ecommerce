@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
   ArrowLeft,
   SlidersHorizontal,
@@ -14,8 +14,9 @@ import {
   Heart,
   ShoppingBag,
   Bell,
+  Loader2,
+  Sparkles,
 } from 'lucide-react';
-import { PRODUCTS_CATALOG } from '@/data/products';
 import { useFavoriteStore } from '@/store/useFavoriteStore';
 import { useCartStore } from '@/store/useCartStore';
 
@@ -24,166 +25,18 @@ export interface CatalogItem {
   slug: string;
   name: string;
   price: number;
-  badge: string;
+  mrp?: number;
+  badge?: string;
   category: string;
+  subCategory?: string;
   description: string;
   spec: string;
   inStock: boolean;
+  isNewArrival?: boolean;
+  coverPrimary?: string;
+  coverHover?: string;
   images: string[];
 }
-
-const INITIAL_ARCHIVE_ITEMS: CatalogItem[] = [
-  {
-    id: 'hw-01',
-    slug: 'the-bridle-edition',
-    name: 'The Bridle Edition',
-    price: 5499,
-    badge: 'Best Seller',
-    category: 'Full-Grain Belts',
-    description: 'Cut from 100% pure thick leather. Treated with natural wax for a lifetime of daily wear without cracking.',
-    spec: '4.2mm Real Hide • Solid Brass Buckle',
-    inStock: true,
-    images: [
-      '/belt-macro.png',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-02',
-    slug: 'the-onyx-dress',
-    name: 'The Onyx Dress',
-    price: 6299,
-    badge: 'Formal Classic',
-    category: 'Full-Grain Belts',
-    description: 'Sleek formal belt with smooth hand-painted black edges tailored for dress trousers and bespoke suits.',
-    spec: 'Italian Calfskin • Matte Steel Buckle',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-03',
-    slug: 'heritage-raw-saddle',
-    name: 'Heritage Raw Saddle',
-    price: 6999,
-    badge: 'Sold Out',
-    category: 'Full-Grain Belts',
-    description: 'Natural uncolored leather belt that gets richer and darker as you wear it every single day.',
-    spec: 'Extra Heavy Leather • Hand-Stitched',
-    inStock: false,
-    images: [
-      'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-04',
-    slug: 'bespoke-folio-wallet',
-    name: 'Bespoke Folio Wallet',
-    price: 4499,
-    badge: 'New Arrival',
-    category: 'Wallets & Carry',
-    description: 'Slim bifold leather wallet holding 8 cards and flat cash without bulging in your pocket.',
-    spec: 'Smooth Grain Leather • Hand-Finished',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-05',
-    slug: 'archival-field-backpack',
-    name: 'Archival Field Backpack',
-    price: 18499,
-    badge: 'Travel Gear',
-    category: 'Wallets & Carry',
-    description: 'Heavyweight all-leather travel pack with reinforced solid copper rivets and padded shoulder straps.',
-    spec: '28L Laptop Capacity • Solid Brass Locks',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-06',
-    slug: 'service-derby-shoes',
-    name: 'Service Derby Shoes',
-    price: 14299,
-    badge: 'Hand-Crafted',
-    category: 'Welted Footwear',
-    description: 'Classic lace-up formal derby shoes made with replaceable double leather soles for decade-long wear.',
-    spec: 'Goodyear Welt Construction • Calf Leather',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-07',
-    slug: 'tea-core-steer-moto-jacket',
-    name: 'Tea-Core Steer Moto Jacket',
-    price: 32999,
-    badge: 'Pure Leather Jacket',
-    category: 'Outerwear Atelier',
-    description: 'Heavyweight genuine motorcycle rider leather jacket with heavy duty brass metal zippers.',
-    spec: '1.4mm Heavy Cowhide • Satin Inner Lining',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1200&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-08',
-    slug: 'monolithic-field-duffle-45l',
-    name: 'Monolithic Field Duffle 45L',
-    price: 24999,
-    badge: 'Weekend Duffle',
-    category: 'Wallets & Carry',
-    description: 'Large weekend duffle bag cut from full-grain leather. Designed to handle airline travel effortlessly.',
-    spec: '45L Cabin Approved • Copper Rivets',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1200&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-09',
-    slug: 'magsafe-leather-case',
-    name: 'MagSafe Leather Case',
-    price: 3499,
-    badge: 'Phone Cases',
-    category: 'Wallets & Carry',
-    description: 'Real leather phone case with built-in MagSafe magnets that develops a dark, glossy patina with daily touch.',
-    spec: 'Soft Microfiber Inside • Real Leather Shell',
-    inStock: true,
-    images: [
-      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1000&auto=format&fit=crop'
-    ]
-  },
-  {
-    id: 'hw-10',
-    slug: 'raw-harness-slide',
-    name: 'Raw Harness Slide',
-    price: 7999,
-    badge: 'Summer Sandals',
-    category: 'Welted Footwear',
-    description: 'Comfortable contoured leather sandals with thick solid brass buckles hand-made on natural soles.',
-    spec: 'All-Leather Footbed • Solid Brass Buckle',
-    inStock: false,
-    images: [
-      'https://images.unsplash.com/photo-1603808033192-082d6919d3e1?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1000&auto=format&fit=crop'
-    ]
-  }
-];
 
 function ShopProductCard({
   prod,
@@ -193,15 +46,19 @@ function ShopProductCard({
   aspect?: string;
 }) {
   const router = useRouter();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(cardRef, { once: true, amount: 0.05 });
+
   const [isHovered, setIsHovered] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
-  const hasSecondary = prod.images && prod.images.length > 1;
 
-  // Favorites Hook
+  const primaryImage = prod.coverPrimary || prod.images?.[0] || '/belt-macro.png';
+  const hoverImage = prod.coverHover || prod.images?.[1] || primaryImage;
+  const hasSecondary = hoverImage !== primaryImage;
+
   const { isFavorite, addFavorite, removeFavorite } = useFavoriteStore();
   const isFav = isFavorite(prod.id);
 
-  // Cart Store Hook
   const addItemToCart = useCartStore((state) => state.addItem);
   const openCart = useCartStore((state) => state.openCart);
 
@@ -215,9 +72,9 @@ function ShopProductCard({
         id: prod.id,
         name: prod.name,
         price: prod.price,
-        badge: prod.badge,
+        badge: prod.badge || (prod.isNewArrival ? 'New Arrival' : ''),
         category: prod.category,
-        image: prod.images[0],
+        image: primaryImage,
         spec: prod.spec,
       });
     }
@@ -234,7 +91,7 @@ function ShopProductCard({
       price: prod.price,
       size: '34',
       quantity: 1,
-      image: prod.images[0],
+      image: primaryImage,
       category: prod.category,
     });
 
@@ -255,34 +112,41 @@ function ShopProductCard({
 
   return (
     <article
+      ref={cardRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group flex flex-col justify-between w-full select-none"
     >
       <div className="relative w-full">
-        {/* Visual Stage Box */}
-        <div className={`relative ${aspect} w-full overflow-hidden bg-neutral-200/50 mb-2.5`}>
-          {/* Main Visual Image Link */}
+        {/* White Backdrop Before Scroll Reveal */}
+        <div className={`relative ${aspect} w-full overflow-hidden bg-white mb-2.5`}>
           <Link
             href={`/products/${prod.slug}`}
             className="absolute inset-0 z-0 block cursor-pointer"
             aria-label={`View details for ${prod.name}`}
           >
-            <img
-              src={prod.images[0]}
-              alt={prod.name}
-              loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1000&auto=format&fit=crop';
-              }}
-            />
+            {/* Primary Image: Left-to-Right Wipe on Scroll */}
+            <motion.div
+              initial={{ x: '-101%' }}
+              animate={isInView ? { x: '0%' } : { x: '-101%' }}
+              transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-0 w-full h-full will-change-transform"
+            >
+              <img
+                src={primaryImage}
+                alt={prod.name}
+                loading="lazy"
+                className="w-full h-full object-cover pointer-events-none transition-transform duration-700 ease-[0.16,1,0.3,1] group-hover:scale-105"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/belt-macro.png';
+                }}
+              />
+            </motion.div>
 
-            {/* Secondary Image Flip */}
+            {/* Hover Image Flip */}
             {hasSecondary && (
               <motion.img
-                src={prod.images[1]}
+                src={hoverImage}
                 alt={`${prod.name} alternate view`}
                 initial={false}
                 animate={{
@@ -298,11 +162,17 @@ function ShopProductCard({
             )}
           </Link>
 
-          {/* Top-Left Badges */}
+          {/* Badges */}
           <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 pointer-events-none">
             {prod.badge && (
               <span className="bg-black text-white text-[8px] sm:text-[9px] font-mono uppercase px-1.5 sm:px-2 py-0.5 font-bold tracking-wider">
                 {prod.badge}
+              </span>
+            )}
+            {prod.isNewArrival && !prod.badge && (
+              <span className="bg-purple-900 text-purple-200 text-[8px] sm:text-[9px] font-mono uppercase px-1.5 sm:px-2 py-0.5 font-bold tracking-wider flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" />
+                <span>NEW DROP</span>
               </span>
             )}
             {!prod.inStock && (
@@ -312,7 +182,7 @@ function ShopProductCard({
             )}
           </div>
 
-          {/* Top-Right Heart Wishlist Trigger (Isolated from Link) */}
+          {/* Wishlist Button */}
           <button
             type="button"
             onClick={toggleFavorite}
@@ -326,7 +196,7 @@ function ShopProductCard({
             />
           </button>
 
-          {/* Bottom Hover Actions Bar (Isolated from Link) */}
+          {/* Bottom Hover Actions Bar */}
           <div className="absolute inset-x-0 bottom-0 z-30 p-2 pointer-events-auto">
             <AnimatePresence>
               {isHovered && (
@@ -350,7 +220,7 @@ function ShopProductCard({
                       ) : (
                         <>
                           <ShoppingBag className="w-3 h-3 text-white" />
-                          <span>+ QUICK ADD • 34&quot;</span>
+                          <span>+ QUICK ADD</span>
                         </>
                       )}
                     </button>
@@ -370,11 +240,8 @@ function ShopProductCard({
           </div>
         </div>
 
-        {/* Bottom Title & Price (Direct Navigation Link) */}
-        <div
-          onClick={navigateToProduct}
-          className="cursor-pointer"
-        >
+        {/* Title & Pricing */}
+        <div onClick={navigateToProduct} className="cursor-pointer">
           <div className="flex items-baseline justify-between gap-2 font-mono text-[11px] sm:text-xs">
             <div className="flex items-center gap-1.5 min-w-0">
               <span
@@ -391,11 +258,17 @@ function ShopProductCard({
               <span className="font-bold text-red-600">
                 ₹{prod.price.toLocaleString('en-IN')}
               </span>
+              {prod.mrp && prod.mrp > prod.price && (
+                <span className="text-neutral-400 line-through text-[10px] ml-1.5">
+                  ₹{prod.mrp.toLocaleString('en-IN')}
+                </span>
+              )}
             </div>
           </div>
 
           <p className="text-[10px] text-neutral-500 font-sans truncate mt-0.5">
-            {prod.spec}
+            {prod.subCategory ? `${prod.subCategory} • ` : ''}
+            {prod.spec || 'Pure Leather Piece'}
           </p>
         </div>
       </div>
@@ -403,91 +276,56 @@ function ShopProductCard({
   );
 }
 
-function RevealRow({
-  children,
-  className = '',
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -35 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, amount: 0.08 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 const CATEGORIES = [
   'ALL PRODUCTS',
-  'LEATHER BELTS',
-  'LEATHER JACKETS',
+  'FULL-GRAIN BELTS',
   'WALLETS & CARRY',
-  'LEATHER SHOES',
+  'OUTERWEAR ATELIER',
+  'WELTED FOOTWEAR',
 ];
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'featured';
 type PriceFilter = 'all' | 'under-5k' | '5k-10k' | 'above-10k';
 
 export default function ShopAllPage() {
+  const [products, setProducts] = useState<CatalogItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('ALL PRODUCTS');
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [priceRange, setPriceRange] = useState<PriceFilter>('all');
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 
-  const allProducts: CatalogItem[] = useMemo(() => {
-    const list = [...INITIAL_ARCHIVE_ITEMS];
-    PRODUCTS_CATALOG.forEach((p) => {
-      if (!list.some((item) => item.slug === p.slug)) {
-        list.push({
-          id: p.slug,
-          slug: p.slug,
-          name: p.name,
-          price: p.price,
-          badge: p.badge,
-          category: 'Full-Grain Belts',
-          description: p.description,
-          spec: `${p.thickness} • ${p.hardware}`,
-          inStock: p.inStock,
-          images: p.images,
-        });
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const res = await fetch('/api/products', { cache: 'no-store' });
+        const data = await res.json();
+        if (data.products) {
+          setProducts(data.products);
+        }
+      } catch (err) {
+        console.error('Failed to fetch store products:', err);
+      } finally {
+        setIsLoading(false);
       }
-    });
-    return list;
+    };
+    fetchCatalog();
   }, []);
 
   const filteredProducts = useMemo(() => {
-    let result = [...allProducts];
+    let result = [...products];
 
-    // 1. Category Filter
     if (activeCategory !== 'ALL PRODUCTS') {
-      const categoryMap: Record<string, string> = {
-        'LEATHER BELTS': 'full-grain belts',
-        'LEATHER JACKETS': 'outerwear atelier',
-        'WALLETS & CARRY': 'wallets & carry',
-        'LEATHER SHOES': 'welted footwear',
-      };
-
-      const targetCategory = categoryMap[activeCategory];
-      if (targetCategory) {
-        result = result.filter(
-          (item) => item.category.toLowerCase() === targetCategory
-        );
-      }
+      result = result.filter(
+        (item) => item.category.toLowerCase() === activeCategory.toLowerCase()
+      );
     }
 
-    // 2. Stock Availability Filter
     if (onlyInStock) {
       result = result.filter((item) => item.inStock);
     }
 
-    // 3. Price Range Filter
     if (priceRange === 'under-5k') {
       result = result.filter((item) => item.price < 5000);
     } else if (priceRange === '5k-10k') {
@@ -496,17 +334,16 @@ export default function ShopAllPage() {
       result = result.filter((item) => item.price > 10000);
     }
 
-    // 4. Sorting
     if (sortBy === 'price-asc') {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
       result.sort((a, b) => b.price - a.price);
     } else if (sortBy === 'featured') {
-      result.sort((a, b) => (b.badge === 'Best Seller' ? 1 : 0) - (a.badge === 'Best Seller' ? 1 : 0));
+      result.sort((a, b) => (b.isNewArrival ? 1 : 0) - (a.isNewArrival ? 1 : 0));
     }
 
     return result;
-  }, [allProducts, activeCategory, sortBy, onlyInStock, priceRange]);
+  }, [products, activeCategory, sortBy, onlyInStock, priceRange]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -540,7 +377,7 @@ export default function ShopAllPage() {
     name: 'HIDEWOOD | 100% Genuine Full-Grain Leather Products',
     description:
       'Explore handcrafted full-grain leather belts, slim wallets, duffels, leather jackets, and accessories made in Kanpur.',
-    url: 'https://hidewood.example.com/products',
+    url: 'https://hidewood.in/products',
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: filteredProducts.map((prod, index) => ({
@@ -550,7 +387,7 @@ export default function ShopAllPage() {
           '@type': 'Product',
           name: prod.name,
           description: prod.description,
-          image: prod.images[0],
+          image: prod.coverPrimary || prod.images?.[0] || '',
           offers: {
             '@type': 'Offer',
             priceCurrency: 'INR',
@@ -572,11 +409,7 @@ export default function ShopAllPage() {
       />
 
       <main className="min-h-screen bg-[#F8F8F6] text-[#111111] antialiased select-none pt-24 sm:pt-32 pb-20 sm:pb-32 overflow-x-hidden">
-        
-        {/* TOP BANNER */}
         <section className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 mb-8 sm:mb-12">
-          
-          {/* Breadcrumb */}
           <nav
             aria-label="Breadcrumb Navigation"
             className="flex items-center justify-between border-b border-black/10 pb-3 font-mono text-[10px] sm:text-xs uppercase mb-6 sm:mb-8"
@@ -591,7 +424,7 @@ export default function ShopAllPage() {
             </Link>
 
             <div className="flex items-center gap-2 text-neutral-400">
-              <span>CATALOG</span>
+              <span>LIVE DATABASE</span>
               <span>&bull;</span>
               <span className="text-black font-bold">
                 {filteredProducts.length} PRODUCTS
@@ -599,13 +432,12 @@ export default function ShopAllPage() {
             </div>
           </nav>
 
-          {/* Section Header */}
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-6 border-b border-black/10">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 font-semibold">
-                  Complete Collection &bull; 100% Genuine Leather
+                  Kanpur Atelier &bull; 100% Genuine Bovine Hide
                 </span>
               </div>
               <h1 className="text-3xl sm:text-6xl lg:text-7xl font-black uppercase tracking-tighter text-black leading-none">
@@ -618,7 +450,6 @@ export default function ShopAllPage() {
             </p>
           </div>
 
-          {/* HORIZONTAL CATEGORY SCROLL & FILTER TRIGGER */}
           <div className="pt-4 flex items-center justify-between overflow-x-auto [scrollbar-width:none] gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {CATEGORIES.map((cat) => {
@@ -640,7 +471,6 @@ export default function ShopAllPage() {
               })}
             </div>
 
-            {/* FILTER & SORT BUTTON */}
             <div className="relative shrink-0 pl-2">
               <button
                 type="button"
@@ -661,7 +491,6 @@ export default function ShopAllPage() {
                 <ChevronDown className={`w-3 h-3 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* FILTER & SORT DRAWER */}
               <AnimatePresence>
                 {isFilterDropdownOpen && (
                   <motion.div
@@ -696,7 +525,6 @@ export default function ShopAllPage() {
                       </div>
                     </div>
 
-                    {/* Sort By */}
                     <div className="mb-4">
                       <span className="text-[10px] text-neutral-400 uppercase tracking-widest block mb-2 font-bold">
                         Sort Products
@@ -704,7 +532,7 @@ export default function ShopAllPage() {
                       <div className="grid grid-cols-2 gap-1.5">
                         {[
                           { label: 'Default', value: 'default' },
-                          { label: 'Popular', value: 'featured' },
+                          { label: 'New Drops', value: 'featured' },
                           { label: '₹ Low to High', value: 'price-asc' },
                           { label: '₹ High to Low', value: 'price-desc' },
                         ].map((opt) => {
@@ -728,7 +556,6 @@ export default function ShopAllPage() {
                       </div>
                     </div>
 
-                    {/* Stock */}
                     <div className="mb-4 pt-3 border-t border-black/10">
                       <span className="text-[10px] text-neutral-400 uppercase tracking-widest block mb-2 font-bold">
                         Stock Availability
@@ -746,7 +573,6 @@ export default function ShopAllPage() {
                       </label>
                     </div>
 
-                    {/* Price Range */}
                     <div className="mb-4 pt-3 border-t border-black/10">
                       <span className="text-[10px] text-neutral-400 uppercase tracking-widest block mb-2 font-bold">
                         Price Range
@@ -778,7 +604,6 @@ export default function ShopAllPage() {
                       </div>
                     </div>
 
-                    {/* Apply */}
                     <button
                       type="button"
                       onClick={() => setIsFilterDropdownOpen(false)}
@@ -791,15 +616,18 @@ export default function ShopAllPage() {
               </AnimatePresence>
             </div>
           </div>
-
         </section>
 
-        {/* DYNAMIC PRODUCT GRID */}
         <section className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12">
-          {filteredProducts.length === 0 ? (
+          {isLoading ? (
+            <div className="py-24 flex flex-col items-center justify-center font-mono text-xs text-neutral-400">
+              <Loader2 className="w-7 h-7 animate-spin text-red-600 mb-2" />
+              <span>Fetching handcrafted leather collection from Kanpur Atelier...</span>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="p-16 border border-black/10 bg-white text-center font-mono">
               <p className="text-sm uppercase text-neutral-500 font-bold">
-                No products found matching your filter criteria
+                No articles found in this selection
               </p>
               <button
                 type="button"
@@ -819,7 +647,7 @@ export default function ShopAllPage() {
 
                 if (pattern === 0 || chunk.length === 4) {
                   return (
-                    <RevealRow
+                    <div
                       key={chunkIdx}
                       className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full"
                     >
@@ -830,7 +658,7 @@ export default function ShopAllPage() {
                           aspect="aspect-[3/4]"
                         />
                       ))}
-                    </RevealRow>
+                    </div>
                   );
                 }
 
@@ -839,7 +667,7 @@ export default function ShopAllPage() {
                   const rightBig = chunk[2];
 
                   return (
-                    <RevealRow
+                    <div
                       key={chunkIdx}
                       className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start"
                     >
@@ -861,7 +689,7 @@ export default function ShopAllPage() {
                           />
                         </div>
                       )}
-                    </RevealRow>
+                    </div>
                   );
                 }
 
@@ -870,7 +698,7 @@ export default function ShopAllPage() {
                   const rightTwo = chunk.slice(1, 3);
 
                   return (
-                    <RevealRow
+                    <div
                       key={chunkIdx}
                       className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 w-full items-start"
                     >
@@ -892,7 +720,7 @@ export default function ShopAllPage() {
                           />
                         ))}
                       </div>
-                    </RevealRow>
+                    </div>
                   );
                 }
 
@@ -902,7 +730,6 @@ export default function ShopAllPage() {
           )}
         </section>
 
-        {/* BOTTOM BENEFIT TILES */}
         <section className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 pt-16 mt-16 border-t border-black/10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
             <div className="p-4 border border-black/10 bg-white">
@@ -933,7 +760,6 @@ export default function ShopAllPage() {
             </div>
           </div>
         </section>
-
       </main>
     </>
   );

@@ -60,8 +60,6 @@ export default function CheckoutCartPage() {
           productId: i.id,
           size: i.size,
           quantity: i.quantity,
-          width: '38mm',
-          buckle: 'Solid Cast Brass',
         })),
       };
 
@@ -76,13 +74,11 @@ export default function CheckoutCartPage() {
       if (res.ok && data.sessionUrl) {
         window.location.href = data.sessionUrl;
       } else {
-        // Smooth production fallback if direct test mode
-        window.location.href = `/order/success?orderId=HW-${Math.floor(100000 + Math.random() * 900000)}`;
+        setErrorMsg(data.error || 'Payment initiation failed. Please try again.');
+        setIsProcessing(false);
       }
-    } catch {
-      // Seamless fallback order completion
-      window.location.href = `/order/success?orderId=HW-${Math.floor(100000 + Math.random() * 900000)}`;
-    } finally {
+    } catch (err: any) {
+      setErrorMsg('Network error or server unavailable. Please check your connection.');
       setIsProcessing(false);
     }
   };
@@ -148,7 +144,7 @@ export default function CheckoutCartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
-            {/* LEFT: CART ITEMS LIST (7 COLS) */}
+            {/* LEFT: CART ITEMS LIST */}
             <div className="lg:col-span-7 border border-black bg-white p-6 sm:p-8 space-y-6">
               <div className="flex items-center justify-between pb-3 border-b border-black/10 font-mono text-xs uppercase font-bold">
                 <span>01 // ITEMS IN YOUR BAG</span>
@@ -238,7 +234,7 @@ export default function CheckoutCartPage() {
               </div>
             </div>
 
-            {/* RIGHT: SHIPPING FORM & PAYMENT SUMMARY (5 COLS) */}
+            {/* RIGHT: SHIPPING FORM */}
             <div className="lg:col-span-5 border border-black bg-white p-6 sm:p-8 space-y-6">
               <div className="flex items-center justify-between pb-3 border-b border-black/10 font-mono text-xs uppercase font-bold">
                 <span>02 // DELIVERY &amp; SHIPPING DETAILS</span>
@@ -255,7 +251,7 @@ export default function CheckoutCartPage() {
                     required
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
+                    placeholder="Rahul Sharma"
                     className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black p-3 text-xs font-mono focus:outline-none transition-colors"
                   />
                 </div>
@@ -313,7 +309,7 @@ export default function CheckoutCartPage() {
                       required
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="Kanpur / Mumbai"
+                      placeholder="Kanpur"
                       className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black p-3 text-xs font-mono focus:outline-none transition-colors"
                     />
                   </div>
@@ -326,7 +322,7 @@ export default function CheckoutCartPage() {
                       required
                       value={postalCode}
                       onChange={(e) => setPostalCode(e.target.value)}
-                      placeholder="208010"
+                      placeholder="208001"
                       className="w-full bg-[#F8F8F6] border border-black/20 focus:border-black p-3 text-xs font-mono focus:outline-none transition-colors"
                     />
                   </div>
@@ -346,10 +342,6 @@ export default function CheckoutCartPage() {
                       {shippingCost === 0 ? 'FREE' : `₹${shippingCost}`}
                     </span>
                   </div>
-                  <div className="flex justify-between text-neutral-500">
-                    <span>GST</span>
-                    <span className="font-bold text-black">Included</span>
-                  </div>
                   <div className="pt-3 border-t border-black/15 flex justify-between text-base font-bold text-black font-sans">
                     <span className="uppercase">Total Amount</span>
                     <span className="font-mono text-red-600">
@@ -359,7 +351,7 @@ export default function CheckoutCartPage() {
                 </div>
 
                 {errorMsg && (
-                  <p className="font-mono text-[11px] text-red-600 font-bold">
+                  <p className="font-mono text-[11px] text-red-600 font-bold bg-red-50 p-2 border border-red-200">
                     {errorMsg}
                   </p>
                 )}
