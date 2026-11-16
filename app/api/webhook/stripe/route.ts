@@ -91,7 +91,7 @@ export async function POST(req: Request) {
           await prisma.order.update({
             where: { id: orderId },
             data: {
-              status: event.type === 'checkout.session.expired' ? 'CANCELLED' : 'FAILED',
+              status: 'CANCELLED',
             },
           });
         }

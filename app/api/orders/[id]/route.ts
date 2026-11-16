@@ -6,20 +6,20 @@ export const dynamic = 'force-dynamic';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!verifyAdminToken(req)) {
       return NextResponse.json({ error: 'Unauthorized Atelier Admin Access' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { status, courier, trackingNumber } = body;
 
     const validStatuses = ['PENDING', 'PAID', 'CRAFTING', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'];
     if (status && !validStatuses.includes(status)) {
-      return NextResponse.json({ error: 'Invalid order status value' }, { status: 400 });
+      return NextResponse.json({ error: 'Order status value invalid' }, { status: 400 });
     }
 
     const updatedOrder = await prisma.order.update({

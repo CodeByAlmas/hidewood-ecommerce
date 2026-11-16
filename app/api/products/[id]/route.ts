@@ -4,17 +4,16 @@ import { verifyAdminToken } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
-// 1. PUT: Update existing product / stock / pricing (Strictly Admin Authorized)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!verifyAdminToken(req)) {
       return NextResponse.json({ error: 'Unauthorized Atelier Admin Access' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
 
     const updatedProduct = await prisma.product.update({
@@ -49,17 +48,16 @@ export async function PUT(
   }
 }
 
-// 2. DELETE: Remove product permanently (Strictly Admin Authorized)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!verifyAdminToken(req)) {
       return NextResponse.json({ error: 'Unauthorized Atelier Admin Access' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     await prisma.product.delete({
       where: { id },
