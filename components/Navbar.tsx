@@ -160,7 +160,6 @@ export default function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Dynamic Categories from Stored Architecture
   const [categoryMap, setCategoryMap] = useState<Record<string, string[]>>(DEFAULT_CATEGORY_SUB_MAP);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
@@ -168,7 +167,6 @@ export default function Navbar({
 
   const [mobileExpandedCat, setMobileExpandedCat] = useState<string | null>(null);
 
-  // Sync Categories safely with microtask scheduling to eliminate setState-in-render conflict
   useEffect(() => {
     let isMounted = true;
 
@@ -214,6 +212,15 @@ export default function Navbar({
       document.body.style.overflow = 'unset';
     }
   }, [isMobileMenuOpen]);
+
+  // Logo Click Handler: ensures top scroll without triggering preloader loops
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setIsMobileMenuOpen(false);
+    if (window.location.pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const handleActionClick = (target: string, isInternalRoute = false) => {
     setIsMobileMenuOpen(false);
@@ -268,11 +275,10 @@ export default function Navbar({
       >
         <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
           
-          {/* EXACT OFFICIAL H LOGO FROM REFERENCE */}
           <div className="flex items-center gap-5 shrink-0">
             <Link
               href="/"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={handleLogoClick}
               className="inline-flex items-center group select-none cursor-pointer"
               aria-label="HIDEWOOD Home"
             >
@@ -283,11 +289,8 @@ export default function Navbar({
                 xmlns="http://www.w3.org/2000/svg"
                 aria-hidden="true"
               >
-                {/* 1. Left Heavy Solid Monolith Rectangle[cite: 7] */}
                 <rect x="18" y="10" width="30" height="80" fill="currentColor" />
-                {/* 2. Right Needle Thin Line[cite: 7] */}
                 <rect x="76" y="10" width="4.5" height="80" rx="2.25" fill="currentColor" />
-                {/* 3. Center Crossbar Passing Through Needle[cite: 7] */}
                 <rect x="44" y="34.5" width="41" height="5" rx="2.5" fill="currentColor" />
               </svg>
             </Link>
@@ -298,7 +301,6 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* DESKTOP NAV LINKS */}
           <nav
             role="navigation"
             aria-label="Main Navigation"
@@ -314,7 +316,6 @@ export default function Navbar({
               <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black group-hover:w-full transition-all duration-300 opacity-80" />
             </Link>
 
-            {/* DYNAMIC COLLECTIONS DRAWER */}
             <div
               className="relative py-1"
               onMouseEnter={handleMouseEnterProducts}
@@ -346,7 +347,6 @@ export default function Navbar({
                     transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute top-full left-0 sm:left-[-40px] w-[680px] bg-white border-2 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-0 overflow-hidden flex z-50 text-black select-none mt-3"
                   >
-                    {/* Left Category List */}
                     <div className="w-[240px] bg-[#F8F8F6] border-r border-black/10 p-3 flex flex-col justify-between shrink-0">
                       <div className="flex flex-col gap-1">
                         <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 px-3 py-1 font-bold">
@@ -387,7 +387,6 @@ export default function Navbar({
                       </div>
                     </div>
 
-                    {/* Right Sub-Category View */}
                     <div className="flex-1 p-5 bg-white flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between pb-2 mb-3 border-b border-black/10 font-mono text-[10px] uppercase">
@@ -478,7 +477,6 @@ export default function Navbar({
             </Link>
           </nav>
 
-          {/* RIGHT ACTIONS */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               href="/favorites"
@@ -534,7 +532,6 @@ export default function Navbar({
               <ArrowUpRight className="w-3 h-3 opacity-60" />
             </Link>
 
-            {/* MOBILE HAMBURGER BUTTON */}
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -563,7 +560,6 @@ export default function Navbar({
         </div>
       </header>
 
-      {/* MOBILE DRAWER */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -643,7 +639,6 @@ export default function Navbar({
                 </Link>
               </div>
 
-              {/* Dynamic Accordion Categories */}
               <div className="flex flex-col gap-2.5 my-3">
                 <span className="text-[9px] font-mono uppercase tracking-widest text-neutral-500">
                   // BROWSE BY CATEGORY

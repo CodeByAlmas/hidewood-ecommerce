@@ -80,7 +80,9 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   const [showCurtain, setShowCurtain] = useState(false);
   const hasCompletedRef = useRef(false);
 
-  // Randomize card order, subtle tilt angles & slight micro-offsets on every refresh
+  // useRef to lock the start time permanently on initial mount so re-renders never reset it
+  const startTimeRef = useRef<number | null>(null);
+
   const [randomizedCards, setRandomizedCards] = useState(() =>
     BASE_CARDS.map((card) => ({
       ...card,
@@ -95,8 +97,8 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       .sort(() => Math.random() - 0.5)
       .map((card, index) => {
         const sign = index % 2 === 0 ? 1 : -1;
-        const randomAngle = sign * (Math.floor(Math.random() * 9) + 3); // -11deg to +11deg
-        const microX = Math.floor(Math.random() * 14) - 7; // -7px to +7px subtle deck offset
+        const randomAngle = sign * (Math.floor(Math.random() * 9) + 3);
+        const microX = Math.floor(Math.random() * 14) - 7;
         const microY = Math.floor(Math.random() * 14) - 7;
         return {
           ...card,
@@ -111,13 +113,16 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   }, []);
 
   useEffect(() => {
+    if (startTimeRef.current === null) {
+      startTimeRef.current = performance.now();
+    }
+
     let animationFrameId: number;
-    const duration = 2600;
-    const startTime = performance.now();
+    const duration = 2200;
 
     const updateProgress = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const rawProgress = Math.min(elapsed / duration, 1);
+      const elapsed = currentTime - (startTimeRef.current as number);
+      const rawProgress = Math.min(Math.max(elapsed / duration, 0), 1);
 
       const easedProgress =
         rawProgress < 0.5
@@ -131,9 +136,11 @@ export default function Preloader({ onComplete }: PreloaderProps) {
         animationFrameId = requestAnimationFrame(updateProgress);
       } else if (!hasCompletedRef.current) {
         hasCompletedRef.current = true;
-        setTimeout(() => setIsReversing(true), 200);
-        setTimeout(() => setShowCurtain(true), 760);
-        setTimeout(() => onComplete(), 1300);
+        setTimeout(() => setIsReversing(true), 150);
+        setTimeout(() => setShowCurtain(true), 600);
+        setTimeout(() => {
+          onComplete();
+        }, 1100);
       }
     };
 
@@ -154,7 +161,6 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       aria-label={`Loading HIDEWOOD Kanpur Atelier: ${counter}%`}
       className="fixed inset-0 z-[100] flex flex-col items-center justify-between py-6 sm:py-10 px-4 sm:px-8 select-none overflow-hidden bg-[#080808]"
     >
-      {/* TOP RAZOR PROGRESS LINE */}
       <div className="fixed top-0 inset-x-0 h-[2px] bg-white/10 z-20 pointer-events-none">
         <div
           className="h-full bg-white transition-all duration-100 ease-out"
@@ -162,29 +168,25 @@ export default function Preloader({ onComplete }: PreloaderProps) {
         />
       </div>
 
-      {/* 1. TOP BAR */}
       <div className="w-full max-w-[1800px] flex items-center justify-between font-mono text-[10px] sm:text-xs tracking-[0.2em] text-neutral-400 uppercase z-20">
         <span className="text-neutral-500">KANPUR // 26.4499° N</span>
         <span className="text-neutral-500">100% REAL HIDE</span>
       </div>
 
-      {/* 2. TRANSITION CURTAIN (Bottom-to-Top Wipe) */}
       {showCurtain && (
         <motion.div
           initial={{ scaleY: 0 }}
           animate={{ scaleY: 1 }}
-          transition={{ duration: 0.52, ease: [0.83, 0, 0.17, 1] }}
+          transition={{ duration: 0.45, ease: [0.83, 0, 0.17, 1] }}
           className="absolute inset-0 bg-[#F8F8F6] origin-bottom z-50 pointer-events-none"
         />
       )}
 
-      {/* 3. CENTER STAGE */}
       <div className="relative w-full max-w-[330px] sm:max-w-[480px] md:max-w-[560px] h-[320px] sm:h-[380px] flex items-center justify-center my-auto">
-        {/* TOP-RIGHT STAGE COUNTER */}
         <motion.div
           animate={
             isReversing
-              ? { opacity: 0, y: -12, transition: { duration: 0.3, ease: SHRINK_EASE } }
+              ? { opacity: 0, y: -12, transition: { duration: 0.25, ease: SHRINK_EASE } }
               : { opacity: 1, y: 0 }
           }
           className="absolute top-4 right-3 sm:top-6 sm:right-6 z-40 font-mono text-xs sm:text-sm tracking-[0.15em] text-white font-bold tabular-nums"
@@ -192,7 +194,6 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           {formattedCounter}
         </motion.div>
 
-        {/* STACKED CARDS: Pure Center Zoom-In (scale 0 -> 1) & Center Shrink-Out (scale 1 -> 0) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {randomizedCards.map((card, idx) => {
             const isVisible = counter >= card.trigger;
@@ -209,8 +210,8 @@ export default function Preloader({ onComplete }: PreloaderProps) {
                         x: 0,
                         y: 0,
                         transition: {
-                          duration: 0.38,
-                          delay: (randomizedCards.length - 1 - idx) * 0.04,
+                          duration: 0.3,
+                          delay: (randomizedCards.length - 1 - idx) * 0.03,
                           ease: SHRINK_EASE,
                         },
                       }
@@ -221,7 +222,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
                         x: card.x,
                         y: card.y,
                         transition: {
-                          duration: 0.55,
+                          duration: 0.45,
                           ease: ZOOM_EASE,
                         },
                       }
@@ -255,7 +256,6 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           })}
         </div>
 
-        {/* 4. TYPOGRAPHY: BOTTOM-TO-TOP ENTRY & UPWARD EXIT WITH INDEPENDENT LETTER TIMINGS */}
         <div
           className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
           style={{ mixBlendMode: 'difference' }}
@@ -299,7 +299,6 @@ export default function Preloader({ onComplete }: PreloaderProps) {
               );
             })}
 
-            {/* Trade Mark (TM) Symbol */}
             <div className="overflow-hidden inline-block self-start mt-1 ml-0.5 sm:ml-1">
               <motion.span
                 initial={{ y: '115%' }}
@@ -308,8 +307,8 @@ export default function Preloader({ onComplete }: PreloaderProps) {
                     ? {
                         y: '-115%',
                         transition: {
-                          duration: 0.4,
-                          delay: 0.32,
+                          duration: 0.35,
+                          delay: 0.25,
                           ease: SHRINK_EASE,
                         },
                       }
@@ -317,7 +316,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
                     ? {
                         y: '0%',
                         transition: {
-                          duration: 0.55,
+                          duration: 0.45,
                           ease: ZOOM_EASE,
                         },
                       }
@@ -332,7 +331,6 @@ export default function Preloader({ onComplete }: PreloaderProps) {
         </div>
       </div>
 
-      {/* 5. BOTTOM FOOTER TICKER */}
       <div className="w-full max-w-[1800px] flex items-center justify-between font-mono text-[9px] sm:text-[10px] tracking-widest text-neutral-500 uppercase z-20">
         <span>ARCHIVE INITIALIZING</span>
         <span className="text-neutral-400">ZERO CARDBOARD CORE</span>
